@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "tharacartonlinestore"
+  },
+  "targets": {
+    "tharacartonlinestore": {
+      "hosting": {
+        "tharacartwebadmin": [
+          "tharacartwebadmin"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
