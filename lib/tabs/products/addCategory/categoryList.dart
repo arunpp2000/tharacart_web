@@ -1,22 +1,21 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
-import '../../../widgets/button.dart';
-import '../dashboard/dashboard.dart';
-import 'b2c/detailsPage.dart';
-import 'failedOrderDetailsPage.dart';
+import '../../../../widgets/button.dart';
+import '../../dashboard/dashboard.dart';
+import 'editCategory.dart';
 
-
-class FailedOrders extends StatefulWidget {
-  const FailedOrders({Key? key}) : super(key: key);
+class CatoryList extends StatefulWidget {
+  const CatoryList({Key? key}) : super(key: key);
 
   @override
-  _FailedOrdersState createState() => _FailedOrdersState();
+  _CatoryListState createState() => _CatoryListState();
 }
 
-class _FailedOrdersState extends State<FailedOrders> {
+class _CatoryListState extends State<CatoryList> {
   List students = [];
   late TextEditingController search = TextEditingController();
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -99,10 +98,8 @@ class _FailedOrdersState extends State<FailedOrders> {
   void initState() {
     super.initState();
     selectedIndex = 0;
-    userStream =
-        FirebaseFirestore.instance.collection('pendingPayments')
-        .orderBy('placedDate',descending: true)
-        .where('paymentReceived',isEqualTo: false)
+    userStream = FirebaseFirestore.instance
+        .collection('category')
         .limit(limit)
         .snapshots();
   }
@@ -126,7 +123,7 @@ class _FailedOrdersState extends State<FailedOrders> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Failed Orders',
+                        'Categery List ',
                         style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 25,
@@ -136,115 +133,7 @@ class _FailedOrdersState extends State<FailedOrders> {
                   ],
                 ),
               ),
-              Center(
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Material(
-                      color: Colors.transparent,
-                      elevation: 5,
-                      child: Container(
-                        width: 550,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: 1,
-                              color: Color(0xFFF1F4F8),
-                              offset: Offset(0, 0),
-                            )
-                          ],
-                        ),
-                        child: Padding(
-                          padding:
-                          EdgeInsetsDirectional.fromSTEB(24, 12, 24, 12),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              SingleChildScrollView(
-                                controller: scroll,
-                                child: Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                    children:
-                                    List.generate(datas.length, (index) {
-                                      return Padding(
-                                        padding:
-                                        const EdgeInsets.only(right: 10),
-                                        child: InkWell(
-                                          onTap: () {
-                                            selectedIndex = index;
-                                            if(index==0){
-                                            userStream=  FirebaseFirestore.instance.collection('pendingPayments')
-                                                  .orderBy('placedDate',descending: true)
-                                                  .where('paymentReceived',isEqualTo: false)
-                                                  .limit(limit)
-                                                  .snapshots();
-                                            }else{
-                                              userStream= FirebaseFirestore.instance.collection('pendingB2BPayments')
-                                                  .orderBy('placedDate',descending: true)
-                                                  .where('paymentReceived',isEqualTo: false).snapshots();
-                                            }
-                                            setState(() {});
-                                          },
-                                          child: Container(
-                                            width: 90,
-                                            height: 80,
-                                            decoration: BoxDecoration(
-                                              color: selectedIndex == index
-                                                  ? Colors.teal
-                                                  : Color(0xFFF1F4F8),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  blurRadius: 5,
-                                                  color: Color(0x3B000000),
-                                                  offset: Offset(0, 2),
-                                                )
-                                              ],
-                                              borderRadius:
-                                              BorderRadius.circular(8),
-                                            ),
-                                            child: Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(4, 4, 4, 4),
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.max,
-                                                mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                                children: [
-                                                  Center(
-                                                    child: Text(
-                                                      datas[index],
-                                                      style: TextStyle(
-                                                        fontFamily:
-                                                        'Lexend Deca',
-                                                        color: selectedIndex ==
-                                                            index
-                                                            ? Colors.white
-                                                            : Color(0xFF090F13),
-                                                        fontSize: 9,
-                                                        fontWeight:
-                                                        FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    })),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+
               Row(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -265,7 +154,8 @@ class _FailedOrdersState extends State<FailedOrders> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Padding(
-                        padding: EdgeInsetsDirectional.fromSTEB(4, 4, 0, 4),
+                        padding:
+                        const EdgeInsetsDirectional.fromSTEB(4, 4, 0, 4),
                         child: Row(
                           mainAxisSize: MainAxisSize.max,
                           children: [
@@ -279,20 +169,12 @@ class _FailedOrdersState extends State<FailedOrders> {
                                   onChanged: (text) {
                                     if (text == "") {
                                       userStream = FirebaseFirestore.instance
-                                          .collection("orders")
-                                          .where('orderStatus', isEqualTo: selectedIndex)
-                                          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-                                          .orderBy('placedDate', descending: true)
+                                          .collection('category')
                                           .limit(limit)
                                           .snapshots();
                                     } else {
                                       userStream = FirebaseFirestore.instance
-                                          .collection("orders")
-                                          .where('orderStatus', isEqualTo: selectedIndex)
-                                          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-                                          .orderBy('placedDate', descending: true)
+                                          .collection('category')
                                           .limit(limit)
                                           .where('search',
                                           arrayContains: text.toUpperCase())
@@ -342,14 +224,12 @@ class _FailedOrdersState extends State<FailedOrders> {
                                 onPressed: () {
                                   search.clear();
                                   userStream = FirebaseFirestore.instance
-                                      .collection("orders")
-                                      .where('orderStatus', isEqualTo: selectedIndex)
-                                      .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                      .where('placedDate', isLessThanOrEqualTo: datePicked2)
-                                      .orderBy('placedDate', descending: true)
+                                      .collection('category')
                                       .limit(limit)
                                       .snapshots();
-                                  setState(() {});
+                                  setState(() {
+
+                                  });
                                 },
                                 text: 'Clear',
                                 options: FFButtonOptions(
@@ -388,8 +268,6 @@ class _FailedOrdersState extends State<FailedOrders> {
                       );
                     }
                     data = [];
-                    students = [];
-                    // students=snapshot.data.docs;
                     data = snapshot.data!.docs;
                     if (data.length != 0) {
                       print(data.length);
@@ -419,30 +297,12 @@ class _FailedOrdersState extends State<FailedOrders> {
                             ),
                           ),
                           DataColumn(
-                            label: Text("Date",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
-                          ),
-                          DataColumn(
                             label: Text(
                               "Name",
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 11),
                             ),
-                          ),
-                          DataColumn(
-                            label: Text("Shipping Method",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
-                          ),
-                          DataColumn(
-                            label: Text("Amount",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
                           ),
                           DataColumn(
                             label: Text("Action",
@@ -454,10 +314,7 @@ class _FailedOrdersState extends State<FailedOrders> {
                         rows: List.generate(
                           data.length,
                               (index) {
-                            // String name = data[index]['shippingAddress']['name'];
-                            String shippingMethod = data[index]['shippingMethod'];
-                            String price = data[index]['price'].toString();
-                            Timestamp placedDate = data[index]['placedDate'];
+                            String name = data[index]['name'];
                             return DataRow(
                               color: index.isOdd
                                   ? MaterialStateProperty.all(Colors
@@ -484,35 +341,7 @@ class _FailedOrdersState extends State<FailedOrders> {
                                   ),
                                 )),
                                 DataCell(SelectableText(
-                                  DateFormat("dd-MM-yyyy")
-                                      .format(placedDate.toDate()),
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend Deca',
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
-                                DataCell(SelectableText(
-                                  'name',
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend Deca',
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
-                                DataCell(SelectableText(
-                                  shippingMethod,
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend Deca',
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
-                                DataCell(SelectableText(
-                                  price,
+                                  name,
                                   style: TextStyle(
                                     fontFamily: 'Lexend Deca',
                                     color: Colors.black,
@@ -527,9 +356,16 @@ class _FailedOrdersState extends State<FailedOrders> {
                                       alignment: Alignment.centerLeft,
                                       child: InkWell(
                                         onTap: () {
-                                           Navigator.push(context, MaterialPageRoute(builder: (context)=>FailedOrderDetails(
-                                             id: data[index].id,
-                                           )));
+                                          Navigator.push(context, MaterialPageRoute(builder: (context)=>EditCategory(
+                                            badge:data[index]['categoryBadge'],
+                                            categoryId:data[index].id,
+                                            name:data[index]['name'],
+                                            description:data[index]['description'],
+                                            brand:data[index]['brand'],
+                                            madeIn:data[index]['madeIn'],
+                                            image:data[index]['imageUrl'],
+                                            banner:data[index]['banner'],
+                                          )));
                                         },
                                         child: Container(
                                             height: 30,
@@ -537,8 +373,8 @@ class _FailedOrdersState extends State<FailedOrders> {
                                             decoration: BoxDecoration(
                                                 color: primaryColor,
                                                 borderRadius:
-                                                BorderRadius
-                                                    .circular(12),
+                                                BorderRadius.circular(
+                                                    12),
                                                 border: Border.all(
                                                     color: Colors.black
                                                         .withOpacity(

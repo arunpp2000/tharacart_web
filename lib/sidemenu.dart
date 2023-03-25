@@ -217,6 +217,25 @@ class _SideMenuState extends State<SideMenu> {
                                           ? FontWeight.bold
                                           : FontWeight.normal),
                                 )),
+                            InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    widget._tabController.animateTo((6));
+                                    selectedTab = 2;
+                                    subTab = 5;
+                                  });
+                                },
+                                child: ColaspeItem(
+                                  label: "Quotation",
+                                  icon: Icons.stop_rounded,
+                                  style: TextStyle(
+                                      color: subTab == 5
+                                          ? Colors.blue.shade300
+                                          : Colors.grey,
+                                      fontWeight: subTab == 5
+                                          ? FontWeight.bold
+                                          : FontWeight.normal),
+                                )),
                           ],
                         ),
                       ),
@@ -278,7 +297,7 @@ class _SideMenuState extends State<SideMenu> {
                             InkWell(
                                 onTap: () {
                                   setState(() {
-                                    widget._tabController.animateTo((6));
+                                    widget._tabController.animateTo((7));
                                     selectedTab = 3;
                                     subTab = 1;
                                   });
@@ -297,7 +316,7 @@ class _SideMenuState extends State<SideMenu> {
                             InkWell(
                                 onTap: () {
                                   setState(() {
-                                    widget._tabController.animateTo((7));
+                                    widget._tabController.animateTo((8));
                                     selectedTab = 3;
                                     subTab = 2;
                                   });
@@ -316,7 +335,7 @@ class _SideMenuState extends State<SideMenu> {
                             InkWell(
                                 onTap: () {
                                   setState(() {
-                                    widget._tabController.animateTo((8));
+                                    widget._tabController.animateTo((9));
                                     selectedTab = 3;
                                     subTab = 3;
                                   });
@@ -335,57 +354,57 @@ class _SideMenuState extends State<SideMenu> {
                             InkWell(
                                 onTap: () {
                                   setState(() {
-                                    widget._tabController.animateTo((8));
+                                    widget._tabController.animateTo((10));
                                     selectedTab = 3;
-                                    subTab = 3;
+                                    subTab = 4;
                                   });
                                 },
                                 child: ColaspeItem(
                                   label: "Category List",
                                   icon: Icons.stop_rounded,
                                   style: TextStyle(
-                                      color: subTab == 3
+                                      color: subTab == 4
                                           ? Colors.blue.shade300
                                           : Colors.grey,
-                                      fontWeight: subTab == 3
+                                      fontWeight: subTab == 4
                                           ? FontWeight.bold
                                           : FontWeight.normal),
                                 )),
                             InkWell(
                                 onTap: () {
                                   setState(() {
-                                    widget._tabController.animateTo((9));
+                                    widget._tabController.animateTo((11));
                                     selectedTab = 3;
-                                    subTab = 4;
+                                    subTab = 5;
                                   });
                                 },
                                 child: ColaspeItem(
                                   label: "Add Brand",
                                   icon: Icons.stop_rounded,
                                   style: TextStyle(
-                                      color: subTab == 4
+                                      color: subTab == 5
                                           ? Colors.blue.shade300
                                           : Colors.grey,
-                                      fontWeight: subTab == 4
+                                      fontWeight: subTab == 5
                                           ? FontWeight.bold
                                           : FontWeight.normal),
                                 )),
                             InkWell(
                                 onTap: () {
                                   setState(() {
-                                    widget._tabController.animateTo((9));
+                                    widget._tabController.animateTo((12));
                                     selectedTab = 3;
-                                    subTab = 4;
+                                    subTab = 6;
                                   });
                                 },
                                 child: ColaspeItem(
                                   label: "Brand List",
                                   icon: Icons.stop_rounded,
                                   style: TextStyle(
-                                      color: subTab == 4
+                                      color: subTab == 6
                                           ? Colors.blue.shade300
                                           : Colors.grey,
-                                      fontWeight: subTab == 4
+                                      fontWeight: subTab == 6
                                           ? FontWeight.bold
                                           : FontWeight.normal),
                                 )),
@@ -410,7 +429,7 @@ class _SideMenuState extends State<SideMenu> {
                       header: Container(
                         height: 30,
                         decoration: BoxDecoration(
-                          border: selectedTab == 3
+                          border: selectedTab == 4
                               ? Border(
                                   left: BorderSide(
                                     color: Color(0xff0087cd),
@@ -451,8 +470,8 @@ class _SideMenuState extends State<SideMenu> {
                             InkWell(
                                 onTap: () {
                                   setState(() {
-                                    widget._tabController.animateTo((2));
-                                    selectedTab = 3;
+                                    widget._tabController.animateTo((13));
+                                    selectedTab = 4;
                                     subTab = 1;
                                   });
                                 },
@@ -470,19 +489,19 @@ class _SideMenuState extends State<SideMenu> {
                             InkWell(
                                 onTap: () {
                                   setState(() {
-                                    widget._tabController.animateTo((2));
-                                    selectedTab = 3;
-                                    subTab = 1;
+                                    widget._tabController.animateTo((13));
+                                    selectedTab = 4;
+                                    subTab = 2;
                                   });
                                 },
                                 child: ColaspeItem(
                                   label: "B2C Banner",
                                   icon: Icons.stop_rounded,
                                   style: TextStyle(
-                                      color: subTab == 1
+                                      color: subTab == 2
                                           ? Colors.blue.shade300
                                           : Colors.grey,
-                                      fontWeight: subTab == 1
+                                      fontWeight: subTab == 2
                                           ? FontWeight.bold
                                           : FontWeight.normal),
                                 )),
@@ -500,7 +519,7 @@ class _SideMenuState extends State<SideMenu> {
                     height: 30,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      border: selectedTab == 0
+                      border: selectedTab == 5
                           ? Border(
                               left: BorderSide(
                                 color: Color(0xff0087cd),
@@ -515,8 +534,8 @@ class _SideMenuState extends State<SideMenu> {
                         setState(() {
                           print(selectedTab);
                           print(subTab);
-                          widget._tabController.animateTo((0));
-                          selectedTab = 0;
+                          widget._tabController.animateTo((15));
+                          selectedTab = 5;
                           subTab = 0;
                         });
                       },
@@ -547,51 +566,96 @@ class _SideMenuState extends State<SideMenu> {
                     color: Colors.blueGrey.shade800,
                   ),
                   //users
-                  Container(
-                    height: 30,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      border: selectedTab == 0
-                          ? Border(
-                              left: BorderSide(
-                                color: Color(0xff0087cd),
-                                width: 3,
-                              ),
-                            )
-                          : null,
-                    ),
-                    // color: Color(0xFF1a2226),
-                    child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          print(selectedTab);
-                          print(subTab);
-                          widget._tabController.animateTo((0));
-                          selectedTab = 0;
-                          subTab = 0;
-                        });
-                      },
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Icon(
-                            Icons.account_circle_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          SizedBox(
-                            width: 7,
-                          ),
-                          Text(
-                            "Users",
-                            style: TextStyle(
-                              color: Colors.white,
+                  InkWell(
+                    onTap: () {},
+                    child: ExpandablePanel(
+                      theme: ExpandableThemeData(
+                        iconColor: Colors.white,
+                        iconSize: 14,
+                      ),
+                      header: Container(
+                        height: 30,
+                        decoration: BoxDecoration(
+                          border: selectedTab == 6
+                              ? Border(
+                            left: BorderSide(
+                              color: Color(0xff0087cd),
+                              width: 3,
                             ),
                           )
-                        ],
+                              : null,
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Icon(
+                              FontAwesomeIcons.inbox,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                            SizedBox(
+                              width: 7,
+                            ),
+                            Text(
+                              "Users",
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            )
+                          ],
+                        ),
                       ),
+                      expanded: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        child: Column(
+                          children: [
+                            InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    widget._tabController.animateTo((16));
+                                    selectedTab = 6;
+                                    subTab = 1;
+                                  });
+                                },
+                                child: ColaspeItem(
+                                  label: "Users",
+                                  icon: Icons.stop_rounded,
+                                  style: TextStyle(
+                                      color: subTab == 1
+                                          ? Colors.blue.shade300
+                                          : Colors.grey,
+                                      fontWeight: subTab == 1
+                                          ? FontWeight.bold
+                                          : FontWeight.normal),
+                                )),
+                            InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    widget._tabController.animateTo((17));
+                                    selectedTab = 6;
+                                    subTab = 2;
+                                  });
+                                },
+                                child: ColaspeItem(
+                                  label: "Deleted Users",
+                                  icon: Icons.stop_rounded,
+                                  style: TextStyle(
+                                      color: subTab == 2
+                                          ? Colors.blue.shade300
+                                          : Colors.grey,
+                                      fontWeight: subTab == 2
+                                          ? FontWeight.bold
+                                          : FontWeight.normal),
+                                )),
+                          ],
+                        ),
+                      ),
+                      collapsed: SizedBox(),
                     ),
                   ),
                   Divider(
@@ -602,7 +666,7 @@ class _SideMenuState extends State<SideMenu> {
                     height: 30,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      border: selectedTab == 0
+                      border: selectedTab == 7
                           ? Border(
                               left: BorderSide(
                                 color: Color(0xff0087cd),
@@ -618,7 +682,7 @@ class _SideMenuState extends State<SideMenu> {
                           print(selectedTab);
                           print(subTab);
                           widget._tabController.animateTo((0));
-                          selectedTab = 0;
+                          selectedTab = 7;
                           subTab = 0;
                         });
                       },

@@ -1,19 +1,23 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:tharacart_web/tabs/orders/returnOrders/returnOrdersDetails.dart';
+import '../../../../widgets/button.dart';
+import '../../widgets/uploadmedia.dart';
+import '../dashboard/dashboard.dart';
+import '../products/addCategory/editCategory.dart';
 
-import '../../../widgets/button.dart';
 
-class B2BOrders extends StatefulWidget {
-  const B2BOrders({Key? key}) : super(key: key);
+class AdminUsers extends StatefulWidget {
+  const AdminUsers({Key? key}) : super(key: key);
 
   @override
-  _B2BOrdersState createState() => _B2BOrdersState();
+  _AdminUsersState createState() => _AdminUsersState();
 }
 
-class _B2BOrdersState extends State<B2BOrders> {
-  List students = [];
+class _AdminUsersState extends State<AdminUsers> {
   late TextEditingController search = TextEditingController();
   final scaffoldKey = GlobalKey<ScaffoldState>();
   Stream<QuerySnapshot>? userStream;
@@ -76,10 +80,8 @@ class _B2BOrdersState extends State<B2BOrders> {
 
   List datas = [
     'Pending',
-    'Accepted',
-    'Cancelled',
-    'Shipped',
-    'Delivered',
+    'Approved',
+    'Deleted',
   ];
 
   Map<int, DocumentSnapshot> lastDocuments = {};
@@ -93,25 +95,17 @@ class _B2BOrdersState extends State<B2BOrders> {
   Timestamp? datePicked2;
   DateTime selectedDate1 = DateTime.now();
   DateTime selectedDate2 = DateTime.now();
-  final scroll = ScrollController();
+
   @override
   void initState() {
     super.initState();
-
-    DateTime time = DateTime.now();
-    datePicked1 =
-        Timestamp.fromDate(DateTime(time.year, time.month, time.day, 0, 0, 0));
-    datePicked2 = Timestamp.fromDate(
-        DateTime(time.year, time.month, time.day, 23, 59, 59));
     selectedIndex = 0;
     userStream = FirebaseFirestore.instance
-        .collection("orders")
-        .where('orderStatus', isEqualTo: selectedIndex)
-        .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-        .where('placedDate', isLessThanOrEqualTo: datePicked2)
-        .orderBy('placedDate', descending: true)
-        .limit(limit)
-        // .where('branchId', isEqualTo: selectedBranch)
+        .collection('admin_users')
+        .where('verified', isNotEqualTo: true)
+        .where('delete', isEqualTo: false)
+        .orderBy('verified', descending: true)
+        .orderBy('created_time', descending: true)
         .snapshots();
   }
 
@@ -134,7 +128,7 @@ class _B2BOrdersState extends State<B2BOrders> {
                   children: [
                     Expanded(
                       child: Text(
-                        'B2B Orders',
+                        'Admin Users',
                         style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 25,
@@ -183,16 +177,38 @@ class _B2BOrdersState extends State<B2BOrders> {
                                         child: InkWell(
                                           onTap: () {
                                             selectedIndex = index;
-                                            userStream = FirebaseFirestore
-                                                .instance
-                                                .collection("orders")
-                                                .where('orderStatus', isEqualTo: selectedIndex)
-                                                .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                                .where('placedDate', isLessThanOrEqualTo: datePicked2)
-                                                .orderBy('placedDate', descending: true)
-                                                .limit(limit)
-                                                // .where('branchId', isEqualTo: selectedBranch)
-                                                .snapshots();
+                                            if (selectedIndex == 0) {
+                                              userStream = FirebaseFirestore
+                                                  .instance
+                                                  .collection('admin_users')
+                                                  .where('verified',
+                                                      isNotEqualTo: true)
+                                                  .where('delete',
+                                                      isEqualTo: false)
+                                                  .orderBy('verified',
+                                                      descending: true)
+                                                  .orderBy('created_time',
+                                                      descending: true)
+                                                  .snapshots();
+                                            } else if (selectedIndex == 1) {
+                                              userStream = FirebaseFirestore
+                                                  .instance
+                                                  .collection('admin_users')
+                                                  .where('verified',
+                                                      isEqualTo: true)
+                                                  .orderBy('created_time',
+                                                      descending: true)
+                                                  .snapshots();
+                                            } else if (selectedIndex == 2) {
+                                              userStream = FirebaseFirestore
+                                                  .instance
+                                                  .collection('admin_users')
+                                                  .where('delete',
+                                                      isEqualTo: true)
+                                                  .orderBy('created_time',
+                                                      descending: true)
+                                                  .snapshots();
+                                            }
                                             setState(() {});
                                           },
                                           child: Container(
@@ -252,89 +268,6 @@ class _B2BOrdersState extends State<B2BOrders> {
                   ],
                 ),
               ),
-              Container(
-                width: 550,
-                height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.black),
-                  color: Colors.white,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                        onPressed: () {
-                          showDatePicker(
-                              context: context,
-                              initialDate: selectedDate1,
-                              firstDate: DateTime(1901, 1),
-                              lastDate: DateTime(2100, 1))
-                              .then((value) {
-                            DateFormat("yyyy-MM-dd").format(value!);
-                            datePicked1 = Timestamp.fromDate(value);
-                            selectedDate1 = value;
-                            // getOrders();
-
-                            setState(() {});
-                          });
-                        },
-                        child: Text(
-                          datePicked1 == null
-                              ? 'Choose Starting Date'
-                              : datePicked1!
-                              .toDate()
-                              .toString()
-                              .substring(0, 10),
-                          style:TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.blue,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        )),
-                    Text(
-                      'To',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                    TextButton(
-                        onPressed: () {
-                          showDatePicker(
-                              context: context,
-                              initialDate: selectedDate2,
-                              firstDate: DateTime(1901, 1),
-                              lastDate: DateTime(2100, 1))
-                              .then((value) {
-                            DateFormat("yyyy-MM-dd").format(value!);
-                            datePicked2 = Timestamp.fromDate(value.add(
-                                Duration(
-                                    hours: 23,
-                                    minutes: 59,
-                                    seconds: 59)));
-                            selectedDate2 = value;
-                            setState(() {});
-                          });
-                        },
-                        child: Text(
-                          datePicked2 == null
-                              ? 'Choose Ending Date'
-                              : datePicked2!
-                              .toDate()
-                              .toString()
-                              .substring(0, 10),
-                          style:TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.blue,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        )),
-                  ],
-                ),
-              ),
               Row(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -366,30 +299,7 @@ class _B2BOrdersState extends State<B2BOrders> {
                                 child: TextFormField(
                                   controller: search,
                                   obscureText: false,
-                                  onChanged: (text) {
-                                    if (text == "") {
-                                      userStream = FirebaseFirestore.instance
-                                          .collection("orders")
-                                          .where('orderStatus', isEqualTo: selectedIndex)
-                                          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-                                          .orderBy('placedDate', descending: true)
-                                          .limit(limit)
-                                          .snapshots();
-                                    } else {
-                                      userStream = FirebaseFirestore.instance
-                                          .collection("orders")
-                                          .where('orderStatus', isEqualTo: selectedIndex)
-                                          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-                                          .orderBy('placedDate', descending: true)
-                                          .limit(limit)
-                                          .where('search',
-                                              arrayContains: text.toUpperCase())
-                                          .snapshots();
-                                    }
-                                    setState(() {});
-                                  },
+                                  onChanged: (text) {},
                                   decoration: InputDecoration(
                                     labelText: 'Search ',
                                     hintText: 'Please Enter Name',
@@ -433,9 +343,12 @@ class _B2BOrdersState extends State<B2BOrders> {
                                   search.clear();
                                   userStream = FirebaseFirestore.instance
                                       .collection("orders")
-                                      .where('orderStatus', isEqualTo: selectedIndex)
-                                      .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                      .where('placedDate', isLessThanOrEqualTo: datePicked2)
+                                      .where('orderStatus',
+                                          isEqualTo: selectedIndex)
+                                      .where('placedDate',
+                                          isGreaterThanOrEqualTo: datePicked1)
+                                      .where('placedDate',
+                                          isLessThanOrEqualTo: datePicked2)
                                       .orderBy('placedDate', descending: true)
                                       .limit(limit)
                                       .snapshots();
@@ -478,8 +391,6 @@ class _B2BOrdersState extends State<B2BOrders> {
                       );
                     }
                     data = [];
-                    students = [];
-                    // students=snapshot.data.docs;
                     data = snapshot.data!.docs;
                     if (data.length != 0) {
                       print(data.length);
@@ -509,6 +420,18 @@ class _B2BOrdersState extends State<B2BOrders> {
                                   ),
                                 ),
                                 DataColumn(
+                                  label: Text("Date",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11)),
+                                ),
+                                DataColumn(
+                                  label: Text("Profile",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11)),
+                                ),
+                                DataColumn(
                                   label: Text(
                                     "Name",
                                     style: TextStyle(
@@ -517,37 +440,13 @@ class _B2BOrdersState extends State<B2BOrders> {
                                   ),
                                 ),
                                 DataColumn(
-                                  label: Text("Invoice Number",
+                                  label: Text("Email",
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 11)),
                                 ),
                                 DataColumn(
-                                  label: Text("Accepted Date",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11)),
-                                ),
-                                DataColumn(
-                                  label: Text("Placed Date",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11)),
-                                ),
-                                DataColumn(
-                                  label: Text('Shipping Method',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11)),
-                                ),
-                                DataColumn(
-                                  label: Text("shipRocketOrderId",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11)),
-                                ),
-                                DataColumn(
-                                  label: Text("Price",
+                                  label: Text("View",
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 11)),
@@ -556,15 +455,12 @@ class _B2BOrdersState extends State<B2BOrders> {
                               rows: List.generate(
                                 data.length,
                                 (index) {
-                                  String name = data[index]['shippingAddress']['name'];
-                                  // String mobile = data[index]['mobNo'];
-
-                                  String invoiceno = '';
-                                  String shippingMethod = data[index]['shippingMethod'];
-                                  String price = data[index]['price'].toString();
-                                  Timestamp deliveredDated = data[index]['deliveredDated'];
-                                  Timestamp placedDate = data[index]['placedDate'];
-
+                                  String name = data[index]['display_name'];
+                                  String email = data[index]['email'];
+                                  String image =
+                                      data[index]['photo_url'].toString();
+                                  Timestamp placedDate =
+                                      data[index]['created_time'];
                                   return DataRow(
                                     color: index.isOdd
                                         ? MaterialStateProperty.all(Colors
@@ -591,47 +487,6 @@ class _B2BOrdersState extends State<B2BOrders> {
                                         ),
                                       )),
                                       DataCell(SelectableText(
-                                        '$name',
-                                        style: TextStyle(
-                                          fontFamily: 'Lexend Deca',
-                                          color: Colors.black,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )),
-                                      DataCell(Container(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.1,
-                                        child: SelectableText(
-                                          invoiceno,
-                                          style: TextStyle(
-                                            fontFamily: 'Lexend Deca',
-                                            color: Colors.black,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      )),
-                                      DataCell(SelectableText(
-                                        price,
-                                        style: TextStyle(
-                                          fontFamily: 'Lexend Deca',
-                                          color: Colors.black,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )),
-                                      DataCell(SelectableText(
-                                        shippingMethod,
-                                        style: TextStyle(
-                                          fontFamily: 'Lexend Deca',
-                                          color: Colors.black,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )),
-                                      DataCell(SelectableText(
                                         DateFormat("dd-MM-yyyy")
                                             .format(placedDate.toDate()),
                                         style: TextStyle(
@@ -641,9 +496,44 @@ class _B2BOrdersState extends State<B2BOrders> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       )),
+                                      DataCell(InkWell(
+                                        onTap: () async {
+                                          await showDialog(
+                                              barrierDismissible: true,
+                                              context: context,
+                                              builder: (buildContext) {
+                                                return AlertDialog(
+                                                  insetPadding:
+                                                      EdgeInsets.all(12),
+                                                  content: Center(
+                                                      child: Container(
+                                                    height: 500,
+                                                    width: 500,
+                                                    child: CachedNetworkImage(
+                                                      imageUrl: image,
+                                                    ),
+                                                  )),
+                                                  actions: [
+                                                    TextButton(
+                                                        onPressed: () {
+                                                          Navigator.pop(
+                                                              context);
+                                                        },
+                                                        child:
+                                                            const Text('back')),
+                                                  ],
+                                                );
+                                              });
+                                        },
+                                        child: Container(
+                                            height: 150,
+                                            width: 100,
+                                            child: CachedNetworkImage(
+                                              imageUrl: image,
+                                            )),
+                                      )),
                                       DataCell(SelectableText(
-                                        DateFormat("dd-MM-yyyy")
-                                            .format(deliveredDated.toDate()),
+                                        name,
                                         style: TextStyle(
                                           fontFamily: 'Lexend Deca',
                                           color: Colors.black,
@@ -651,6 +541,81 @@ class _B2BOrdersState extends State<B2BOrders> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       )),
+                                      DataCell(SelectableText(
+                                        email,
+                                        style: TextStyle(
+                                          fontFamily: 'Lexend Deca',
+                                          color: Colors.black,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      )),
+                                      DataCell(
+                                        selectedIndex == 0
+                                            ? ElevatedButton(
+                                                onPressed: () async {
+                                                  bool proceed = await alert(
+                                                      context,
+                                                      'Do You want to Approve this user  ?');
+                                                  if (proceed) {
+                                                    await FirebaseFirestore
+                                                        .instance
+                                                        .collection('branches')
+                                                        .doc(currentBranchId)
+                                                        .update({
+                                                      'admins': FieldValue
+                                                          .arrayUnion([
+                                                        data[index]['email']
+                                                      ]),
+                                                    });
+                                                  }
+                                                },
+                                                child: Icon(Icons.add))
+                                            : selectedIndex == 1
+                                                ? ElevatedButton(
+                                                    onPressed: () async {
+                                                      bool proceed = await alert(
+                                                          context,
+                                                          'Do You want to Remove this user  ?');
+                                                      if (proceed) {
+                                                        await FirebaseFirestore
+                                                            .instance
+                                                            .collection(
+                                                                'branches')
+                                                            .doc(
+                                                                currentBranchId)
+                                                            .update({
+                                                          'admins': FieldValue
+                                                              .arrayRemove([
+                                                            data[index]['email']
+                                                          ]),
+                                                        });
+                                                      }
+                                                    },
+                                                    child: Icon(Icons.delete))
+                                                : ElevatedButton(
+                                                    onPressed: () async {
+                                                      bool proceed = await alert(
+                                                          context,
+                                                          'Do You want to add pending List ?');
+                                                      if (proceed) {
+                                                        FirebaseFirestore
+                                                            .instance
+                                                            .collection(
+                                                                'admin_users')
+                                                            .doc(data[index]
+                                                                ['uid'])
+                                                            .update({
+                                                          'delete': false
+                                                        });
+                                                        Navigator.pop(context);
+                                                        showUploadMessage(
+                                                            context,
+                                                            'Successfully Added');
+                                                      }
+                                                    },
+                                                    child: Icon(Icons.add)),
+                                      )
                                     ],
                                   );
                                 },

@@ -3,10 +3,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import '../../widgets/button.dart';
-import '../../widgets/storage.dart';
-import '../../widgets/uploadmedia.dart';
-import '../dashboard/dashboard.dart';
+import '../../../widgets/button.dart';
+import '../../../widgets/storage.dart';
+import '../../../widgets/uploadmedia.dart';
+import '../../dashboard/dashboard.dart';
 
 
 class AddBrand extends StatefulWidget {
@@ -78,6 +78,23 @@ class _AddBrandState extends State<AddBrand> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Padding(
+                  padding: EdgeInsetsDirectional.fromSTEB(20, 15, 20, 0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Add Brands',
+                          style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 25,
+                              fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(

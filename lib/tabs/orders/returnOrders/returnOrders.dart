@@ -2,19 +2,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:tharacart_web/tabs/orders/returnOrders/returnOrdersDetails.dart';
 
-import '../../../widgets/button.dart';
-import '../dashboard/dashboard.dart';
+import '../../../../widgets/button.dart';
+import '../../dashboard/dashboard.dart';
+import '../b2c/detailsPage.dart';
 
-
-class ProductList extends StatefulWidget {
-  const ProductList({Key? key}) : super(key: key);
+class ReturnOrders extends StatefulWidget {
+  const ReturnOrders({Key? key}) : super(key: key);
 
   @override
-  _ProductListState createState() => _ProductListState();
+  _ReturnOrdersState createState() => _ReturnOrdersState();
 }
 
-class _ProductListState extends State<ProductList> {
+class _ReturnOrdersState extends State<ReturnOrders> {
   List students = [];
   late TextEditingController search = TextEditingController();
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -77,8 +78,9 @@ class _ProductListState extends State<ProductList> {
   }
 
   List datas = [
-    'B2C',
-    'B2B',
+    'Requests',
+    'Approved',
+    'Rejected',
   ];
 
   Map<int, DocumentSnapshot> lastDocuments = {};
@@ -92,17 +94,16 @@ class _ProductListState extends State<ProductList> {
   Timestamp? datePicked2;
   DateTime selectedDate1 = DateTime.now();
   DateTime selectedDate2 = DateTime.now();
-  final scroll = ScrollController();
+
   @override
   void initState() {
     super.initState();
-    selectedIndex = 0;
-    userStream =
-        FirebaseFirestore.instance.collection('pendingPayments')
-            .orderBy('placedDate',descending: true)
-            .where('paymentReceived',isEqualTo: false)
-            .limit(limit)
-            .snapshots();
+    selectedIndex=0;
+    userStream = FirebaseFirestore.instance.collection('cancellationRequests')
+        .orderBy('placedDate',descending: true)
+        .where('cancellationStatus',isEqualTo: selectedIndex)
+        .limit(limit)
+        .snapshots();
   }
 
   @override
@@ -124,7 +125,7 @@ class _ProductListState extends State<ProductList> {
                   children: [
                     Expanded(
                       child: Text(
-                        ' ',
+                        'Return Orders',
                         style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 25,
@@ -134,115 +135,109 @@ class _ProductListState extends State<ProductList> {
                   ],
                 ),
               ),
-              // Center(
-              //   child: Row(
-              //     mainAxisSize: MainAxisSize.max,
-              //     children: [
-              //       Material(
-              //         color: Colors.transparent,
-              //         elevation: 5,
-              //         child: Container(
-              //           width: 550,
-              //           decoration: BoxDecoration(
-              //             color: Colors.white,
-              //             boxShadow: [
-              //               BoxShadow(
-              //                 blurRadius: 1,
-              //                 color: Color(0xFFF1F4F8),
-              //                 offset: Offset(0, 0),
-              //               )
-              //             ],
-              //           ),
-              //           child: Padding(
-              //             padding:
-              //             EdgeInsetsDirectional.fromSTEB(24, 12, 24, 12),
-              //             child: Row(
-              //               mainAxisSize: MainAxisSize.max,
-              //               children: [
-              //                 SingleChildScrollView(
-              //                   controller: scroll,
-              //                   child: Row(
-              //                       mainAxisSize: MainAxisSize.max,
-              //                       mainAxisAlignment:
-              //                       MainAxisAlignment.spaceBetween,
-              //                       children:
-              //                       List.generate(datas.length, (index) {
-              //                         return Padding(
-              //                           padding:
-              //                           const EdgeInsets.only(right: 10),
-              //                           child: InkWell(
-              //                             onTap: () {
-              //                               selectedIndex = index;
-              //                               if(index==0){
-              //                                 userStream=  FirebaseFirestore.instance.collection('pendingPayments')
-              //                                     .orderBy('placedDate',descending: true)
-              //                                     .where('paymentReceived',isEqualTo: false)
-              //                                     .limit(limit)
-              //                                     .snapshots();
-              //                               }else{
-              //                                 userStream= FirebaseFirestore.instance.collection('pendingB2BPayments')
-              //                                     .orderBy('placedDate',descending: true)
-              //                                     .where('paymentReceived',isEqualTo: false).snapshots();
-              //                               }
-              //                               setState(() {});
-              //                             },
-              //                             child: Container(
-              //                               width: 90,
-              //                               height: 80,
-              //                               decoration: BoxDecoration(
-              //                                 color: selectedIndex == index
-              //                                     ? Colors.teal
-              //                                     : Color(0xFFF1F4F8),
-              //                                 boxShadow: [
-              //                                   BoxShadow(
-              //                                     blurRadius: 5,
-              //                                     color: Color(0x3B000000),
-              //                                     offset: Offset(0, 2),
-              //                                   )
-              //                                 ],
-              //                                 borderRadius:
-              //                                 BorderRadius.circular(8),
-              //                               ),
-              //                               child: Padding(
-              //                                 padding: EdgeInsetsDirectional
-              //                                     .fromSTEB(4, 4, 4, 4),
-              //                                 child: Column(
-              //                                   mainAxisSize: MainAxisSize.max,
-              //                                   mainAxisAlignment:
-              //                                   MainAxisAlignment.center,
-              //                                   children: [
-              //                                     Center(
-              //                                       child: Text(
-              //                                         datas[index],
-              //                                         style: TextStyle(
-              //                                           fontFamily:
-              //                                           'Lexend Deca',
-              //                                           color: selectedIndex ==
-              //                                               index
-              //                                               ? Colors.white
-              //                                               : Color(0xFF090F13),
-              //                                           fontSize: 9,
-              //                                           fontWeight:
-              //                                           FontWeight.bold,
-              //                                         ),
-              //                                       ),
-              //                                     ),
-              //                                   ],
-              //                                 ),
-              //                               ),
-              //                             ),
-              //                           ),
-              //                         );
-              //                       })),
-              //                 ),
-              //               ],
-              //             ),
-              //           ),
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // ),
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      elevation: 5,
+                      child: Container(
+                        width: 550,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 1,
+                              color: Color(0xFFF1F4F8),
+                              offset: Offset(0, 0),
+                            )
+                          ],
+                        ),
+                        child: Padding(
+                          padding:
+                          EdgeInsetsDirectional.fromSTEB(24, 12, 24, 12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              SingleChildScrollView(
+                                controller: scroll,
+                                child: Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children:
+                                    List.generate(datas.length, (index) {
+                                      return Padding(
+                                        padding:
+                                        const EdgeInsets.only(right: 10),
+                                        child: InkWell(
+                                          onTap: () {
+                                            selectedIndex = index;
+                                            userStream = FirebaseFirestore.instance.collection('cancellationRequests')
+                                                .orderBy('placedDate',descending: true)
+                                                .where('cancellationStatus',isEqualTo: selectedIndex)
+                                                .limit(limit)
+                                                .snapshots();
+                                            setState(() {});
+                                          },
+                                          child: Container(
+                                            width: 90,
+                                            height: 80,
+                                            decoration: BoxDecoration(
+                                              color: selectedIndex == index
+                                                  ? Colors.teal
+                                                  : Color(0xFFF1F4F8),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  blurRadius: 5,
+                                                  color: Color(0x3B000000),
+                                                  offset: Offset(0, 2),
+                                                )
+                                              ],
+                                              borderRadius:
+                                              BorderRadius.circular(8),
+                                            ),
+                                            child: Padding(
+                                              padding: EdgeInsetsDirectional
+                                                  .fromSTEB(4, 4, 4, 4),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.max,
+                                                mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                                children: [
+                                                  Center(
+                                                    child: Text(
+                                                      datas[index],
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                        'Lexend Deca',
+                                                        color: selectedIndex ==
+                                                            index
+                                                            ? Colors.white
+                                                            : Color(0xFF090F13),
+                                                        fontSize: 9,
+                                                        fontWeight:
+                                                        FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    })),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               Row(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -263,7 +258,7 @@ class _ProductListState extends State<ProductList> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(4, 4, 0, 4),
+                        padding: EdgeInsetsDirectional.fromSTEB(4, 4, 0, 4),
                         child: Row(
                           mainAxisSize: MainAxisSize.max,
                           children: [
@@ -279,6 +274,8 @@ class _ProductListState extends State<ProductList> {
                                       userStream = FirebaseFirestore.instance
                                           .collection("orders")
                                           .where('orderStatus', isEqualTo: selectedIndex)
+                                          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
+                                          .where('placedDate', isLessThanOrEqualTo: datePicked2)
                                           .orderBy('placedDate', descending: true)
                                           .limit(limit)
                                           .snapshots();
@@ -286,6 +283,8 @@ class _ProductListState extends State<ProductList> {
                                       userStream = FirebaseFirestore.instance
                                           .collection("orders")
                                           .where('orderStatus', isEqualTo: selectedIndex)
+                                          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
+                                          .where('placedDate', isLessThanOrEqualTo: datePicked2)
                                           .orderBy('placedDate', descending: true)
                                           .limit(limit)
                                           .where('search',
@@ -448,7 +447,7 @@ class _ProductListState extends State<ProductList> {
                         rows: List.generate(
                           data.length,
                               (index) {
-                            // String name = data[index]['shippingAddress']['name'];
+                            String name = data[index]['shippingAddress']['name'];
                             String shippingMethod = data[index]['shippingMethod'];
                             String price = data[index]['price'].toString();
                             Timestamp placedDate = data[index]['placedDate'];
@@ -488,7 +487,7 @@ class _ProductListState extends State<ProductList> {
                                   ),
                                 )),
                                 DataCell(SelectableText(
-                                  'name',
+                                  name,
                                   style: TextStyle(
                                     fontFamily: 'Lexend Deca',
                                     color: Colors.black,
@@ -506,7 +505,7 @@ class _ProductListState extends State<ProductList> {
                                   ),
                                 )),
                                 DataCell(SelectableText(
-                                  price,
+                                  '\₹'+price,
                                   style: TextStyle(
                                     fontFamily: 'Lexend Deca',
                                     color: Colors.black,
@@ -521,9 +520,9 @@ class _ProductListState extends State<ProductList> {
                                       alignment: Alignment.centerLeft,
                                       child: InkWell(
                                         onTap: () {
-                                          // Navigator.push(context, MaterialPageRoute(builder: (context)=>FailedOrderDetails(
-                                          //   id: data[index].id,
-                                          // )));
+                                          Navigator.push(context, MaterialPageRoute(builder: (context)=>ReturnOrderDetails(
+                                            id:data[index].id
+                                          )));
 
                                         },
                                         child: Container(

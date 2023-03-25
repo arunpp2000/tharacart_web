@@ -1,21 +1,23 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
-import 'package:tharacart_web/tabs/orders/returnOrdersDetails.dart';
+import 'package:tharacart_web/tabs/users/users/userDetailsPage.dart';
 
-import '../../../widgets/button.dart';
+import '../../../../../widgets/button.dart';
 import '../dashboard/dashboard.dart';
-import 'b2c/detailsPage.dart';
 
-class ReturnOrders extends StatefulWidget {
-  const ReturnOrders({Key? key}) : super(key: key);
+
+
+class B2bRequest extends StatefulWidget {
+  const B2bRequest({Key? key}) : super(key: key);
 
   @override
-  _ReturnOrdersState createState() => _ReturnOrdersState();
+  _B2bRequestState createState() => _B2bRequestState();
 }
 
-class _ReturnOrdersState extends State<ReturnOrders> {
+class _B2bRequestState extends State<B2bRequest> {
   List students = [];
   late TextEditingController search = TextEditingController();
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -78,9 +80,8 @@ class _ReturnOrdersState extends State<ReturnOrders> {
   }
 
   List datas = [
-    'Requests',
+    'Requested',
     'Approved',
-    'Rejected',
   ];
 
   Map<int, DocumentSnapshot> lastDocuments = {};
@@ -94,16 +95,15 @@ class _ReturnOrdersState extends State<ReturnOrders> {
   Timestamp? datePicked2;
   DateTime selectedDate1 = DateTime.now();
   DateTime selectedDate2 = DateTime.now();
-
+  final scroll = ScrollController();
   @override
   void initState() {
     super.initState();
-    selectedIndex=0;
-    userStream = FirebaseFirestore.instance.collection('cancellationRequests')
-        .orderBy('placedDate',descending: true)
-        .where('cancellationStatus',isEqualTo: selectedIndex)
-        .limit(limit)
-        .snapshots();
+    selectedIndex = 0;
+    userStream =
+        FirebaseFirestore.instance.collection('b2bRequests')
+            .where('status',isEqualTo: 0)
+            .orderBy('time',descending: true).snapshots();
   }
 
   @override
@@ -125,7 +125,7 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Return Orders',
+                        'B2b Request',
                         style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 25,
@@ -174,12 +174,9 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                                         child: InkWell(
                                           onTap: () {
                                             selectedIndex = index;
-                                            userStream = FirebaseFirestore.instance.collection('cancellationRequests')
-                                                .orderBy('placedDate',descending: true)
-                                                .where('cancellationStatus',isEqualTo: selectedIndex)
-                                                .limit(limit)
-                                                .snapshots();
-                                            setState(() {});
+                                            FirebaseFirestore.instance.collection('b2bRequests')
+                                                .where('status',isEqualTo: selectedIndex)
+                                                .orderBy('time',descending: true).snapshots();
                                           },
                                           child: Container(
                                             width: 90,
@@ -271,25 +268,16 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                                   obscureText: false,
                                   onChanged: (text) {
                                     if (text == "") {
-                                      userStream = FirebaseFirestore.instance
-                                          .collection("orders")
-                                          .where('orderStatus', isEqualTo: selectedIndex)
-                                          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-                                          .orderBy('placedDate', descending: true)
-                                          .limit(limit)
-                                          .snapshots();
+                                      FirebaseFirestore.instance.collection('b2bRequests')
+                                          .where('status',isEqualTo: selectedIndex)
+                                          .orderBy('time',descending: true).snapshots();
                                     } else {
-                                      userStream = FirebaseFirestore.instance
-                                          .collection("orders")
-                                          .where('orderStatus', isEqualTo: selectedIndex)
-                                          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-                                          .orderBy('placedDate', descending: true)
-                                          .limit(limit)
-                                          .where('search',
-                                          arrayContains: text.toUpperCase())
-                                          .snapshots();
+                                      FirebaseFirestore.instance.collection('b2bRequests')
+                                          .where('status',isEqualTo: selectedIndex)
+                                          .orderBy('time',descending: true)
+                                    .where('search',
+                                    arrayContains: text.toUpperCase())
+                                        .snapshots();
                                     }
                                     setState(() {});
                                   },
@@ -334,15 +322,9 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                               child: FFButtonWidget(
                                 onPressed: () {
                                   search.clear();
-                                  userStream = FirebaseFirestore.instance
-                                      .collection("orders")
-                                      .where('orderStatus', isEqualTo: selectedIndex)
-                                      .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                      .where('placedDate', isLessThanOrEqualTo: datePicked2)
-                                      .orderBy('placedDate', descending: true)
-                                      .limit(limit)
-                                      .snapshots();
-                                  setState(() {});
+                                  FirebaseFirestore.instance.collection('b2bRequests')
+                                      .where('status',isEqualTo: selectedIndex)
+                                      .orderBy('time',descending: true).snapshots();
                                 },
                                 text: 'Clear',
                                 options: FFButtonOptions(
@@ -381,8 +363,6 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                       );
                     }
                     data = [];
-                    students = [];
-                    // students=snapshot.data.docs;
                     data = snapshot.data!.docs;
                     if (data.length != 0) {
                       print(data.length);
@@ -411,8 +391,9 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                                   fontSize: 11),
                             ),
                           ),
+
                           DataColumn(
-                            label: Text("Date",
+                            label: Text("Profile",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11)),
@@ -426,19 +407,19 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                             ),
                           ),
                           DataColumn(
-                            label: Text("Shipping Method",
+                            label: Text("Email",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11)),
                           ),
                           DataColumn(
-                            label: Text("Amount",
+                            label: Text("Mobile Number",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11)),
                           ),
                           DataColumn(
-                            label: Text("Action",
+                            label: Text("View",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11)),
@@ -447,10 +428,12 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                         rows: List.generate(
                           data.length,
                               (index) {
-                            // String name = data[index]['shippingAddress']['name'];
-                            String shippingMethod = data[index]['shippingMethod'];
-                            String price = data[index]['price'].toString();
-                            Timestamp placedDate = data[index]['placedDate'];
+                            String name = data[index]['userName'];
+                            String email = data[index]['email'];
+                            String number = data[index]['mobileNumber'];
+                            String image = data[index]['photoUrl'].toString();
+                            // Timestamp placedDate =
+                            // data[index]['created_time'];
                             return DataRow(
                               color: index.isOdd
                                   ? MaterialStateProperty.all(Colors
@@ -476,9 +459,44 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                                     ),
                                   ),
                                 )),
+                                DataCell(InkWell(
+                                  onTap: () async {
+                                    await showDialog(
+                                        barrierDismissible: true,
+                                        context: context,
+                                        builder: (buildContext) {
+                                          return AlertDialog(
+                                            insetPadding:
+                                            EdgeInsets.all(12),
+                                            content: Center(
+                                                child: Container(
+                                                  height: 500,
+                                                  width: 500,
+                                                  child: CachedNetworkImage(
+                                                    imageUrl: image,
+                                                  ),
+                                                )),
+                                            actions: [
+                                              TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(
+                                                        context);
+                                                  },
+                                                  child:
+                                                  const Text('back')),
+                                            ],
+                                          );
+                                        });
+                                  },
+                                  child: Container(
+                                      height: 150,
+                                      width: 100,
+                                      child: CachedNetworkImage(
+                                        imageUrl: image,
+                                      )),
+                                )),
                                 DataCell(SelectableText(
-                                  DateFormat("dd-MM-yyyy")
-                                      .format(placedDate.toDate()),
+                                  name,
                                   style: TextStyle(
                                     fontFamily: 'Lexend Deca',
                                     color: Colors.black,
@@ -487,7 +505,7 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                                   ),
                                 )),
                                 DataCell(SelectableText(
-                                  'name',
+                                  email,
                                   style: TextStyle(
                                     fontFamily: 'Lexend Deca',
                                     color: Colors.black,
@@ -496,16 +514,7 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                                   ),
                                 )),
                                 DataCell(SelectableText(
-                                  shippingMethod,
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend Deca',
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
-                                DataCell(SelectableText(
-                                  price,
+                                  number ,
                                   style: TextStyle(
                                     fontFamily: 'Lexend Deca',
                                     color: Colors.black,
@@ -520,10 +529,9 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                                       alignment: Alignment.centerLeft,
                                       child: InkWell(
                                         onTap: () {
-                                          Navigator.push(context, MaterialPageRoute(builder: (context)=>ReturnOrderDetails(
-                                            id:data[index].id
+                                          Navigator.push(context, MaterialPageRoute(builder: (context)=>UsersViewWidget(
+                                            id:data[index]['userId'],
                                           )));
-
                                         },
                                         child: Container(
                                             height: 30,
@@ -539,7 +547,7 @@ class _ReturnOrdersState extends State<ReturnOrders> {
                                                         0.3))),
                                             alignment: Alignment.center,
                                             child: Text(
-                                              'Action',
+                                              'view',
                                               style: TextStyle(
                                                   color: Colors.white),
                                             )),

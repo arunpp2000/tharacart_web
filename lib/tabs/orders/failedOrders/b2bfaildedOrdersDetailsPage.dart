@@ -2,32 +2,33 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../widgets/uploadmedia.dart';
-import '../../widgets/button.dart';
-import '../dashboard/dashboard.dart';
-import 'b2c/editpop.dart';
+import '../../../../widgets/uploadmedia.dart';
+import '../../../widgets/button.dart';
+import '../../dashboard/dashboard.dart';
+import '../b2c/editpop.dart';
 
-class FailedOrderDetails extends StatefulWidget {
+class B2bfailedOrderDetailsPage extends StatefulWidget {
   var id;
 
-  FailedOrderDetails({
+  B2bfailedOrderDetailsPage({
     Key? key,
     this.id,
   }) : super(key: key);
 
   @override
-  _FailedOrderDetailsState createState() => _FailedOrderDetailsState();
+  _B2bfailedOrderDetailsPageState createState() => _B2bfailedOrderDetailsPageState();
 }
 
-class _FailedOrderDetailsState extends State<FailedOrderDetails> {
+class _B2bfailedOrderDetailsPageState extends State<B2bfailedOrderDetailsPage> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   Map address = {};
   List data = [];
   List items = [];
   int? sum;
+  var t;
   getorders() {
-    FirebaseFirestore.instance.collection('pendingPayments').doc(widget.id).snapshots()
+    FirebaseFirestore.instance.collection('pendingB2BPayments').doc(widget.id).snapshots()
         .listen((event) {
       data.add(event.data());
       print("------------");
@@ -39,6 +40,8 @@ class _FailedOrderDetailsState extends State<FailedOrderDetails> {
         items.add(a);
         sum=a['price']+sum;
       }
+       t=sum!+data[0]['discount']+data[0]['discount']+data[0]['total']+data[0]['gst']+data[0]['deliveryCharge'];
+
       if (mounted) {
         setState(() {
         });
@@ -267,7 +270,7 @@ class _FailedOrderDetailsState extends State<FailedOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText('',
-                                          //  data[0]['shipRocketOrderId'],
+                                            //  data[0]['shipRocketOrderId'],
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -276,7 +279,7 @@ class _FailedOrderDetailsState extends State<FailedOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                           data[0]['referralCode'],
+                                            data[0]['referralCode'],
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -848,33 +851,36 @@ class _FailedOrderDetailsState extends State<FailedOrderDetails> {
                           padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
                           child: Column(
                             children: [
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 80),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            'Product Total (${items.length}) items',
-                                            style: TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          SizedBox(
-                                            width: 50,
-                                          ),
-                                          Text('\₹'+sum.toString() ,style: TextStyle(
-                                              fontSize:15,
-                                              fontWeight: FontWeight.bold),),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              // Padding(
+                              //   padding: EdgeInsets.all(8.0),
+                              //   child: Row(
+                              //     mainAxisAlignment: MainAxisAlignment.end,
+                              //     children: [
+                              //       Padding(
+                              //         padding: const EdgeInsets.only(right: 80),
+                              //         child: Row(
+                              //           children: [
+                              //             Text(
+                              //               'Product Total (${items.length}) items',
+                              //               style: TextStyle(
+                              //                   fontSize: 15,
+                              //                   fontWeight: FontWeight.bold),
+                              //             ),
+                              //             SizedBox(
+                              //               width: 50,
+                              //             ),
+                              //             Text(
+                              //               '\₹$sum',
+                              //               style: TextStyle(
+                              //                   fontSize: 15,
+                              //                   fontWeight: FontWeight.bold),
+                              //             ),
+                              //           ],
+                              //         ),
+                              //       ),
+                              //     ],
+                              //   ),
+                              // ),
                               // Padding(
                               //   padding: EdgeInsets.all(8.0),
                               //   child: Row(
@@ -900,6 +906,125 @@ class _FailedOrderDetailsState extends State<FailedOrderDetails> {
                               //     ],
                               //   ),
                               // ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 80),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Discount',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    Text(
+                                      '\₹${data[0]['discount']}',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 80),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Delivery charge',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    Text(
+                                      '\₹${data[0]['deliveryCharge']}',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              Padding(
+                                padding: const EdgeInsets.only(right: 80),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Total (excel.GST)',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    Text(
+                                      '\₹${data[0]['total'].toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 80),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'GST:',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    Text(
+                                      '\₹${data[0]['gst'].toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              data[0]['shippingMethod'] == 'Cash On Delivery'
+                                  ? Padding(
+                                padding: const EdgeInsets.only(right: 80),
+                                child: Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'COD Charge:',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    Text(
+                                      '\₹ 33.00',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              )
+                                  : SizedBox(),
                               Padding(
                                 padding: EdgeInsets.all(8.0),
                                 child: Row(
@@ -936,14 +1061,16 @@ class _FailedOrderDetailsState extends State<FailedOrderDetails> {
                                             style: TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold),
-
                                           ),
                                           SizedBox(
                                             width: 30,
                                           ),
-                                          Text('\₹'+sum.toString() ,style: TextStyle(
-                                              fontSize:15,
-                                              fontWeight: FontWeight.bold),),
+                                          Text(
+                                            '\₹'+data[0]['price'].toString(),
+                                            style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold),
+                                          ),
                                         ],
                                       ),
                                     )
@@ -958,17 +1085,16 @@ class _FailedOrderDetailsState extends State<FailedOrderDetails> {
                                         context, 'Reorder?');
                                     if(proceed){
 
-                                      // FirebaseFirestore.instance.collection('b2bOrders')
-                                      //     .add(order.data());
-                                      //
-                                      // order.reference.update({
-                                      //   'orderStatus':1,
-                                      //   'paymentReceived':true,
-                                      // });
+// FirebaseFirestore.instance.collection('b2bOrders')
+//     .add(order.data());
+//
+// order.reference.update({
+//   'orderStatus':1,
+//   'paymentReceived':true,
+// });
                                       Navigator.pop(context);
                                       showUploadMessage(context, 'Order Successfully...');
                                     }
-
                                   },
                                   text: 'ReOrder',
                                   options: FFButtonOptions(

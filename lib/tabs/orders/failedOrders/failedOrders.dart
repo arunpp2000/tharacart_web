@@ -3,18 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
-import '../../../widgets/button.dart';
+import '../../../../widgets/button.dart';
 import '../../dashboard/dashboard.dart';
-import 'detailsPage.dart';
+import '../b2c/detailsPage.dart';
+import 'b2bfaildedOrdersDetailsPage.dart';
+import 'failedOrderDetailsPage.dart';
 
-class B2COrders extends StatefulWidget {
-   B2COrders({Key? key}) : super(key: key);
+
+class FailedOrders extends StatefulWidget {
+  const FailedOrders({Key? key}) : super(key: key);
 
   @override
-  _B2COrdersState createState() => _B2COrdersState();
+  _FailedOrdersState createState() => _FailedOrdersState();
 }
 
-class _B2COrdersState extends State<B2COrders> {
+class _FailedOrdersState extends State<FailedOrders> {
   List students = [];
   late TextEditingController search = TextEditingController();
   final scaffoldKey = GlobalKey<ScaffoldState>();
@@ -77,20 +80,17 @@ class _B2COrdersState extends State<B2COrders> {
   }
 
   List datas = [
-    'Pending',
-    'Accepted',
-    'Cancelled',
-    'Shipped',
-    'Delivered',
+    'B2C',
+    'B2B',
   ];
 
   Map<int, DocumentSnapshot> lastDocuments = {};
-  var  data;
+  List data = [];
   int pageIndex = 0;
   var lastDoc;
   var firstDoc;
   int limit = 20;
-  int? selectedIndex = 0;
+  int selectedIndex = 0;
   Timestamp? datePicked1;
   Timestamp? datePicked2;
   DateTime selectedDate1 = DateTime.now();
@@ -99,17 +99,11 @@ class _B2COrdersState extends State<B2COrders> {
   @override
   void initState() {
     super.initState();
-
-    DateTime time = DateTime.now();
-    datePicked1 =
-        Timestamp.fromDate(DateTime(time.year, time.month, time.day, 0, 0, 0));
-    datePicked2 = Timestamp.fromDate(
-        DateTime(time.year, time.month, time.day, 23, 59, 59));
     selectedIndex = 0;
-    userStream = FirebaseFirestore.instance
-        .collection("orders")
-        .where('orderStatus', isEqualTo: 0)
-        .orderBy('placedDate', descending: true)
+    userStream =
+        FirebaseFirestore.instance.collection('pendingPayments')
+        .orderBy('placedDate',descending: true)
+        .where('paymentReceived',isEqualTo: false)
         .limit(limit)
         .snapshots();
   }
@@ -133,7 +127,7 @@ class _B2COrdersState extends State<B2COrders> {
                   children: [
                     Expanded(
                       child: Text(
-                        'B2C Orders',
+                        'Failed Orders',
                         style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 25,
@@ -182,13 +176,17 @@ class _B2COrdersState extends State<B2COrders> {
                                         child: InkWell(
                                           onTap: () {
                                             selectedIndex = index;
-                                            userStream = FirebaseFirestore
-                                                .instance
-                                                .collection("orders")
-                                                .where('orderStatus', isEqualTo: selectedIndex)
-                                                .orderBy('placedDate', descending: true)
-                                                .limit(limit)
-                                                .snapshots();
+                                            if(index==0){
+                                            userStream=  FirebaseFirestore.instance.collection('pendingPayments')
+                                                  .orderBy('placedDate',descending: true)
+                                                  .where('paymentReceived',isEqualTo: false)
+                                                  .limit(limit)
+                                                  .snapshots();
+                                            }else{
+                                              userStream= FirebaseFirestore.instance.collection('pendingB2BPayments')
+                                                  .orderBy('placedDate',descending: true)
+                                                  .where('paymentReceived',isEqualTo: false).snapshots();
+                                            }
                                             setState(() {});
                                           },
                                           child: Container(
@@ -248,95 +246,6 @@ class _B2COrdersState extends State<B2COrders> {
                   ],
                 ),
               ),
-             selectedIndex==0?SizedBox(): Container(
-                width: 550,
-                height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.black),
-                  color: Colors.white,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                        onPressed: () {
-                          showDatePicker(
-                              context: context,
-                              initialDate: selectedDate1,
-                              firstDate: DateTime(1901, 1),
-                              lastDate: DateTime(2100, 1))
-                              .then((value) {
-                            DateFormat("yyyy-MM-dd").format(value!);
-                            datePicked1 = Timestamp.fromDate(value);
-                            selectedDate1 = value;
-                            // getOrders();
-                          userStream=  FirebaseFirestore.instance
-                                .collection('orders')
-                                .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                .where('placedDate', isLessThanOrEqualTo: datePicked2)
-                                .orderBy('placedDate', descending: true)
-                                .snapshots();
-
-                            setState(() {});
-                          });
-                        },
-                        child: Text(
-                          datePicked1 == null
-                              ? 'Choose Starting Date'
-                              : datePicked1!
-                              .toDate()
-                              .toString()
-                              .substring(0, 10),
-                          style:TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.blue,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        )),
-                    Text(
-                      'To',
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                      ),
-                    ),
-                    TextButton(
-                        onPressed: () {
-                          showDatePicker(
-                              context: context,
-                              initialDate: selectedDate2,
-                              firstDate: DateTime(1901, 1),
-                              lastDate: DateTime(2100, 1))
-                              .then((value) {
-                            DateFormat("yyyy-MM-dd").format(value!);
-                            datePicked2 = Timestamp.fromDate(value.add(
-                                Duration(
-                                    hours: 23,
-                                    minutes: 59,
-                                    seconds: 59)));
-                            selectedDate2 = value;
-                            setState(() {});
-                          });
-                        },
-                        child: Text(
-                          datePicked2 == null
-                              ? 'Choose Ending Date'
-                              : datePicked2!
-                              .toDate()
-                              .toString()
-                              .substring(0, 10),
-                          style:TextStyle(
-                            fontFamily: 'Poppins',
-                            color: Colors.blue,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        )),
-                  ],
-                ),
-              ),
               Row(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -373,8 +282,8 @@ class _B2COrdersState extends State<B2COrders> {
                                       userStream = FirebaseFirestore.instance
                                           .collection("orders")
                                           .where('orderStatus', isEqualTo: selectedIndex)
-                                          // .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                          // .where('placedDate', isLessThanOrEqualTo: datePicked2)
+                                          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
+                                          .where('placedDate', isLessThanOrEqualTo: datePicked2)
                                           .orderBy('placedDate', descending: true)
                                           .limit(limit)
                                           .snapshots();
@@ -382,8 +291,8 @@ class _B2COrdersState extends State<B2COrders> {
                                       userStream = FirebaseFirestore.instance
                                           .collection("orders")
                                           .where('orderStatus', isEqualTo: selectedIndex)
-                                          // .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-                                          // .where('placedDate', isLessThanOrEqualTo: datePicked2)
+                                          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
+                                          .where('placedDate', isLessThanOrEqualTo: datePicked2)
                                           .orderBy('placedDate', descending: true)
                                           .limit(limit)
                                           .where('search',
@@ -436,6 +345,8 @@ class _B2COrdersState extends State<B2COrders> {
                                   userStream = FirebaseFirestore.instance
                                       .collection("orders")
                                       .where('orderStatus', isEqualTo: selectedIndex)
+                                      .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
+                                      .where('placedDate', isLessThanOrEqualTo: datePicked2)
                                       .orderBy('placedDate', descending: true)
                                       .limit(limit)
                                       .snapshots();
@@ -471,24 +382,23 @@ class _B2COrdersState extends State<B2COrders> {
               StreamBuilder<QuerySnapshot>(
                   stream: userStream,
                   builder: (context, snapshot) {
-
+                    print(snapshot.error);
                     if (!snapshot.hasData) {
                       return Center(
                         child: CircularProgressIndicator(),
                       );
                     }
-
-
-                    data = snapshot.data;
-
-
-                    if (data!.docs.isEmpty) {
-                      // lastDoc = snapshot.data?.docs[data!.docs.length - 1];
-                      // lastDocuments[pageIndex] = lastDoc;
-                      // firstDoc = snapshot.data?.docs[0];
+                    data = [];
+                    students = [];
+                    // students=snapshot.data.docs;
+                    data = snapshot.data!.docs;
+                    if (data.length != 0) {
+                      print(data.length);
+                      lastDoc = snapshot.data?.docs[data.length - 1];
+                      lastDocuments[pageIndex] = lastDoc;
+                      firstDoc = snapshot.data?.docs[0];
                     }
-
-                    return data!.docs.isEmpty
+                    return data.length == 0
                         ? LottieBuilder.network(
                       'https://assets9.lottiefiles.com/packages/lf20_HpFqiS.json',
                       height: 500,
@@ -543,12 +453,12 @@ class _B2COrdersState extends State<B2COrders> {
                           ),
                         ],
                         rows: List.generate(
-                          data!.docs.length,
+                          data.length,
                               (index) {
-                          String name = data!.docs[index]['shippingAddress']['name'];
-                            String shippingMethod = data!.docs[index]['shippingMethod'];
-                            String price = data!.docs[index]['price'].toString();
-                            Timestamp placedDate = data!.docs[index]['placedDate'];
+                            String name = data[index]['shippingAddress']['name'];
+                            String shippingMethod = data[index]['shippingMethod'];
+                            String price = data[index]['price'].toString();
+                            Timestamp placedDate = data[index]['placedDate'];
                             return DataRow(
                               color: index.isOdd
                                   ? MaterialStateProperty.all(Colors
@@ -603,7 +513,7 @@ class _B2COrdersState extends State<B2COrders> {
                                   ),
                                 )),
                                 DataCell(SelectableText(
-                                  price,
+                                  '\₹'+price,
                                   style: TextStyle(
                                     fontFamily: 'Lexend Deca',
                                     color: Colors.black,
@@ -618,10 +528,15 @@ class _B2COrdersState extends State<B2COrders> {
                                       alignment: Alignment.centerLeft,
                                       child: InkWell(
                                         onTap: () {
-                                          Navigator.push(context, MaterialPageRoute(builder: (context)=>B2cOrderDetails(
-                                            id:data!.docs[index].id,
-                                          )));
-                                          print(data!.docs[index].id);
+                                          if(selectedIndex==0){
+                                            Navigator.push(context, MaterialPageRoute(builder: (context)=>FailedOrderDetails(
+                                              id: data[index].id,
+                                            )));
+                                          }else{
+                                            Navigator.push(context, MaterialPageRoute(builder: (context)=>B2bfailedOrderDetailsPage(
+                                              id: data[index].id,
+                                            )));
+                                          }
 
                                         },
                                         child: Container(
@@ -653,7 +568,7 @@ class _B2COrdersState extends State<B2COrders> {
                       ),
                     );
                   }),
-        selectedIndex==0?SizedBox():  Padding(
+              Padding(
                 padding: const EdgeInsets.only(top: 10),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -673,7 +588,7 @@ class _B2COrdersState extends State<B2COrders> {
                         child: Center(child: Text('Previous')),
                       ),
                     ),
-                    (lastDoc == null && pageIndex != 0) || data!.docs.length < limit
+                    (lastDoc == null && pageIndex != 0) || data.length < limit
                         ? SizedBox()
                         : InkWell(
                       onTap: () {

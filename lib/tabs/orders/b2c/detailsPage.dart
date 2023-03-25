@@ -2,8 +2,17 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:number_to_words/number_to_words.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
+import 'package:tharacart_web/tabs/orders/b2c/pdf.Api.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../widgets/button.dart';
+import '../../../widgets/uploadmedia.dart';
 import '../../dashboard/dashboard.dart';
+import 'b2cpdf.dart';
 import 'editpop.dart';
+import 'invoice.dart';
 
 class B2cOrderDetails extends StatefulWidget {
   var id;
@@ -19,25 +28,42 @@ class B2cOrderDetails extends StatefulWidget {
 
 class _B2cOrderDetailsState extends State<B2cOrderDetails> {
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  _launchURL(String urls) async {
+    var url = urls;
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
 
   Map address = {};
-  List data = [];
+  var data;
   List items = [];
   int? sum;
+  TextEditingController awbCode = TextEditingController();
+  TextEditingController trackingUrl = TextEditingController();
+  String? shipprocketId;
+  String? invoiceNo;
   getorders() {
     FirebaseFirestore.instance
         .collection('orders')
         .doc(widget.id)
         .snapshots()
         .listen((event) {
-      data.add(event.data());
+      data = event.data();
       address = event.data()!['shippingAddress'];
-       sum =0;
+      sum = 0;
       for (var a in event.data()!['items']) {
         items.add(a);
-        sum=a['price']+sum;
-        print("--------");
-        print(sum);
+        sum = a['price'] + sum;
+
+      }
+      try {
+        shipprocketId = data['shippRocketId'];
+        invoiceNo = data['invoiceNo'].toString();
+      } catch (e) {
+        print(e.toString());
       }
       if (mounted) {
         setState(() {});
@@ -45,6 +71,14 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
     });
   }
 
+  // if (widget.order.referralCode != null) {
+  // QuerySnapshot rUsers = await FirebaseFirestore
+  //     .instance
+  //     .collection('users')
+  //     .where('referralCode',
+  // isEqualTo: widget.order.referralCode)
+  //     .get();
+  // }
   @override
   void initState() {
     // TODO: implement initState
@@ -54,6 +88,8 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
 
   @override
   Widget build(BuildContext context) {
+    trackingUrl.text = data['trackingUrl'] ?? '';
+    awbCode.text = data['awb_code'] ?? '';
     return Scaffold(
         key: scaffoldKey,
         appBar: AppBar(
@@ -74,31 +110,7 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
           elevation: 5,
         ),
         backgroundColor: Color(0xFFF1F4F8),
-        body:
-            // StreamBuilder<DocumentSnapshot>(
-            //     stream: FirebaseFirestore.instance
-            //         .collection('orders')
-            //         .doc(widget.id)
-            //         .snapshots(),
-            //     builder: (context, snapshot) {
-            //       if (!snapshot.hasData) {
-            //         print(snapshot.error);
-            //         return Container(color: Colors.white,
-            //             child: Center(
-            //               child: Image.asset('assets/images/loading.gif'),));
-            //       }
-            //       var data = snapshot.data;
-            //       if (snapshot.data!.exists) {
-            //
-            //
-            //
-            //       }
-            //       return !data!.exists
-            //           ? Center(
-            //         child: Text('Loading...'),
-            //       )
-            //           :
-            SingleChildScrollView(
+        body: SingleChildScrollView(
           controller: scroll,
           physics: BouncingScrollPhysics(),
           child: Column(
@@ -127,18 +139,112 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Icon(Icons.shopping_bag),
-                                    SizedBox(
-                                      width: 5,
+                                    Row(
+                                      children: [
+                                        Icon(Icons.shopping_bag),
+                                        SizedBox(
+                                          width: 5,
+                                        ),
+                                        Text(
+                                          'Order Details',
+                                          style: TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold),
+                                        )
+                                      ],
                                     ),
-                                    Text(
-                                      'Order Details',
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold),
-                                    )
+                                    data['orderStatus'] == 3 ||
+                                            data['orderStatus'] == 4
+                                        ? IconButton(
+                                            onPressed: () async {
+                                              Map items = {};
+                                              List products = [];
+                                              for (var a in data['items']) {
+                                                print('=========');
+                                                print(a['name']);
+                                                items = {
+                                                  'productName': a['name'],
+                                                  'price': a['price'],
+                                                  'quantity':
+                                                      a['quantity'].toInt(),
+                                                  'total': a['price'] *
+                                                      a['quantity'],
+                                                  'gst': a['gst'],
+                                                };
+                                                products.add(items);
+                                              }
+                                              print(items);
+                                              List<InvoiceItem> item = [];
+                                              int? amount = int.tryParse(
+                                                  data['price'].toString());
+                                              print(amount.toString());
+                                              String number = NumberToWord()
+                                                  .convert('en-in', amount!);
+                                              for (var data in products) {
+                                                item.add(
+                                                  InvoiceItem(
+                                                    description: data['productName'],
+                                                    gst: data['total'] - data['quantity'] * data['price'] * 100 / (100 + data['gst']),
+                                                    // gst: items['quantity']*items['price']*100/(100+items['gst'])* items['gst']/100,
+                                                    price: data['price'],
+                                                    quantity: data['quantity'],
+                                                    tax: data['quantity'] *
+                                                        data['price'] *
+                                                        100 /
+                                                        (100 + data['gst']),
+                                                    total: data['total'],
+                                                    unitPrice: data['price'] *
+                                                        100 /
+                                                        (100 + data['gst']),
+                                                  ),
+                                                );
+                                              }
+
+                                              final invoice = Invoice(
+                                                invoiceNo: data['invoiceNo'],
+                                                discount: data['discount'],
+                                                shipRocketId:
+                                                    data['shipRocketOrderId'],
+                                                invoiceNoDate:
+                                                    data['invoiceDate'],
+                                                orderId: widget.id,
+                                                shipping:
+                                                    data['deliveryCharge'],
+                                                orderDate: data['placedDate'],
+                                                total: data['total'],
+                                                price: data['price'],
+                                                gst: data['gst'],
+                                                amount: number,
+                                                method: data['shippingMethod'],
+                                                b2b: data['b2b'],
+                                                shippingAddress: [
+                                                  ShippingAddress(
+                                                    gst: data['gst']
+                                                            .toString() ??
+                                                        '',
+                                                    name: address['name'],
+                                                    area: address['area'],
+                                                    address: address['address'],
+                                                    mobileNumber:
+                                                        address['mobileNumber'],
+                                                    pincode: address['pinCode'],
+                                                    city: address['city'],
+                                                    state: address['state'],
+                                                  ),
+                                                ],
+                                                salesItems: item,
+                                              );
+
+                                              final pdfFile =
+                                                  await B2cPdfInvoiceApi
+                                                      .generate(invoice);
+                                              await PdfApi.openFile(pdfFile);
+                                            },
+                                            icon: Icon(Icons.picture_as_pdf))
+                                        : SizedBox(),
                                   ],
                                 ),
                               ),
@@ -157,6 +263,379 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                   ],
                                 ),
                               ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    data['orderStatus'] == 0
+                                        ? Text(
+                                            'Status:' + 'Pending',
+                                            style: TextStyle(
+                                                color: Colors.green,
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold),
+                                          )
+                                        : data['orderStatus'] == 1
+                                            ? Text('Status:' + 'Accepted',
+                                                style: TextStyle(
+                                                    color: Colors.green,
+                                                    fontSize: 15,
+                                                    fontWeight:
+                                                        FontWeight.bold))
+                                            : data['orderStatus'] == 2
+                                                ? Text(
+                                                    'Status:' + 'Cancelled',
+                                                    style: TextStyle(
+                                                        color: Colors.green,
+                                                        fontSize: 15,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  )
+                                                : data['orderStatus'] == 3
+                                                    ? Text(
+                                                        'Status:' + 'Shipped',
+                                                        style: TextStyle(
+                                                            color: Colors.green,
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      )
+                                                    : Text(
+                                                        'Status:' + 'Delivered',
+                                                        style: TextStyle(
+                                                            color: Colors.green,
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .bold),
+                                                      )
+                                  ],
+                                ),
+                              ),
+                              data['orderStatus'] >= 1
+                                  ? Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Padding(
+                                          padding:
+                                              EdgeInsets.fromLTRB(10, 12, 0, 0),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.max,
+                                            children: [
+                                              Container(
+                                                width: 200,
+                                                height: 60,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: Color(0xFFE6E6E6),
+                                                  ),
+                                                ),
+                                                child: Padding(
+                                                  padding: EdgeInsets.fromLTRB(
+                                                      16, 0, 0, 0),
+                                                  child: TextFormField(
+                                                    controller: awbCode,
+                                                    obscureText: false,
+                                                    decoration: InputDecoration(
+                                                      labelText: 'AWB Code',
+                                                      labelStyle: TextStyle(
+                                                        fontFamily:
+                                                            'Montserrat',
+                                                        color:
+                                                            Color(0xFF8B97A2),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                      hintText:
+                                                          'Enter your AWB Code',
+                                                      hintStyle: TextStyle(
+                                                        fontFamily:
+                                                            'Montserrat',
+                                                        color:
+                                                            Color(0xFF8B97A2),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                      enabledBorder:
+                                                          UnderlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                          color: Colors
+                                                              .transparent,
+                                                          width: 1,
+                                                        ),
+                                                        borderRadius:
+                                                            const BorderRadius
+                                                                .only(
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                  4.0),
+                                                          topRight:
+                                                              Radius.circular(
+                                                                  4.0),
+                                                        ),
+                                                      ),
+                                                      focusedBorder:
+                                                          UnderlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                          color: Colors
+                                                              .transparent,
+                                                          width: 1,
+                                                        ),
+                                                        borderRadius:
+                                                            const BorderRadius
+                                                                .only(
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                  4.0),
+                                                          topRight:
+                                                              Radius.circular(
+                                                                  4.0),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    style: TextStyle(
+                                                      fontFamily: 'Montserrat',
+                                                      color: Color(0xFF8B97A2),
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              FFButtonWidget(
+                                                onPressed: () async {
+                                                  // if(awbCode.text!=''){
+                                                  bool pressed = await alert(
+                                                      context, 'Update AWB');
+                                                  if (pressed) {
+                                                    FirebaseFirestore.instance
+                                                        .collection('orders')
+                                                        .doc(widget.id)
+                                                        .update({
+                                                      'awb_code': awbCode.text,
+                                                    });
+                                                  }
+                                                  showUploadMessage(context,
+                                                      'AWB updated...');
+                                                  // }else{
+                                                  //   showUploadMessage(context, 'Please Enter AWB Code...');
+                                                  // }
+                                                },
+                                                text: 'Update',
+                                                options: FFButtonOptions(
+                                                  height: 40,
+                                                  color: primaryColor,
+                                                  textStyle: TextStyle(
+                                                    fontFamily: 'Lexend Deca',
+                                                    color: Colors.white,
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                  borderSide: BorderSide(
+                                                    color: Colors.transparent,
+                                                    width: 1,
+                                                  ),
+                                                  borderRadius: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.fromLTRB(
+                                              10, 12, 0, 10),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.max,
+                                            children: [
+                                              Container(
+                                                width: 500,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: Color(0xFFE6E6E6),
+                                                  ),
+                                                ),
+                                                child: Padding(
+                                                  padding: EdgeInsets.fromLTRB(
+                                                      16, 0, 0, 0),
+                                                  child: TextFormField(
+                                                    controller: trackingUrl,
+                                                    obscureText: false,
+                                                    decoration: InputDecoration(
+                                                      labelText: 'Tracking Url',
+                                                      labelStyle: TextStyle(
+                                                        fontFamily:
+                                                            'Montserrat',
+                                                        color:
+                                                            Color(0xFF8B97A2),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                      hintText:
+                                                          'Enter your Tracking Url',
+                                                      hintStyle: TextStyle(
+                                                        fontFamily:
+                                                            'Montserrat',
+                                                        color:
+                                                            Color(0xFF8B97A2),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                      enabledBorder:
+                                                          UnderlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                          color: Colors
+                                                              .transparent,
+                                                          width: 1,
+                                                        ),
+                                                        borderRadius:
+                                                            const BorderRadius
+                                                                .only(
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                  4.0),
+                                                          topRight:
+                                                              Radius.circular(
+                                                                  4.0),
+                                                        ),
+                                                      ),
+                                                      focusedBorder:
+                                                          UnderlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                          color: Colors
+                                                              .transparent,
+                                                          width: 1,
+                                                        ),
+                                                        borderRadius:
+                                                            const BorderRadius
+                                                                .only(
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                  4.0),
+                                                          topRight:
+                                                              Radius.circular(
+                                                                  4.0),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    style: TextStyle(
+                                                      fontFamily: 'Montserrat',
+                                                      color: Color(0xFF8B97A2),
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  SizedBox(
+                                                    width: 5,
+                                                  ),
+                                                  FFButtonWidget(
+                                                    onPressed: () async {
+                                                      // if(trackingUrl.text!=''){
+                                                      bool pressed = await alert(
+                                                          context,
+                                                          'Update Tracking Url');
+                                                      if (pressed) {
+                                                        FirebaseFirestore
+                                                            .instance
+                                                            .collection(
+                                                                'orders')
+                                                            .doc(widget.id)
+                                                            .update({
+                                                          'trackingUrl':
+                                                              trackingUrl.text,
+                                                        });
+                                                      }
+                                                      showUploadMessage(context,
+                                                          'Tracking Url updated...');
+                                                      // }else{
+                                                      //   showUploadMessage(context, 'Please Enter Tracking Url...');
+                                                      // }
+                                                    },
+                                                    text: 'Update',
+                                                    options: FFButtonOptions(
+                                                      height: 40,
+                                                      color: primaryColor,
+                                                      textStyle: TextStyle(
+                                                        fontFamily:
+                                                            'Lexend Deca',
+                                                        color: Colors.white,
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                      borderSide: BorderSide(
+                                                        color:
+                                                            Colors.transparent,
+                                                        width: 1,
+                                                      ),
+                                                      borderRadius: 12,
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                    width: 10,
+                                                  ),
+                                                  FFButtonWidget(
+                                                    onPressed: () async {
+                                                      if (trackingUrl.text !=
+                                                          '') {
+                                                        bool pressed = await alert(
+                                                            context,
+                                                            'Launch Tracking Url');
+                                                        if (pressed) {
+                                                          _launchURL(
+                                                              trackingUrl.text);
+                                                        }
+                                                      } else {
+                                                        showUploadMessage(
+                                                            context,
+                                                            'Please Enter Tracking Url...');
+                                                      }
+                                                    },
+                                                    text: 'Launch',
+                                                    options: FFButtonOptions(
+                                                      height: 40,
+                                                      color: primaryColor,
+                                                      textStyle: TextStyle(
+                                                        fontFamily:
+                                                            'Lexend Deca',
+                                                        color: Colors.white,
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                      borderSide: BorderSide(
+                                                        color:
+                                                            Colors.transparent,
+                                                        width: 1,
+                                                      ),
+                                                      borderRadius: 12,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    )
+                                  : Container(),
                               SizedBox(
                                 width:
                                     // double.infinity,
@@ -175,11 +654,25 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                     ),
                                     DataColumn(
                                       label: Text(
+                                        "Order Time",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 11),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: Text(
                                         "Shipping Method",
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 11),
                                       ),
+                                    ),
+                                    DataColumn(
+                                      label: Text("Invoice Number",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 11)),
                                     ),
                                     DataColumn(
                                       label: Text(
@@ -205,33 +698,9 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                             fontSize: 11),
                                       ),
                                     ),
-                                    DataColumn(
-                                      label: Text("Discount",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 11)),
-                                    ),
-                                    DataColumn(
-                                      label: Text("Delivery Charge",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 11)),
-                                    ),
-                                    DataColumn(
-                                      label: Text("Total(excl.GST)",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 11)),
-                                    ),
-                                    DataColumn(
-                                      label: Text("COD Charge",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 11)),
-                                    ),
                                   ],
                                   rows: List.generate(
-                                    data.length,
+                                    1,
                                     (index) {
                                       // String name = data[index]['shippingAddress']['name'];
                                       // String shippingMethod = data[index]['shippingMethod'];
@@ -247,7 +716,7 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                         cells: [
                                           DataCell(SelectableText(
                                             DateFormat("dd-MM-yyyy").format(
-                                                data[0]['placedDate'].toDate()),
+                                                data['placedDate'].toDate()),
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -256,7 +725,8 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['shippingMethod'],
+                                            DateFormat.jm().format(
+                                                data['placedDate'].toDate()),
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -265,7 +735,7 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['shipRocketOrderId'],
+                                            data['shippingMethod'],
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -274,7 +744,7 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['referralCode'],
+                                            'TCE-${invoiceNo ?? ''}',
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -283,7 +753,8 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['promoCode'].toString(),
+                                            shipprocketId ?? '',
+                                            // data['shipRocketOrderId'],
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -292,7 +763,7 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['discount'].toString(),
+                                            data['referralCode'],
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -301,26 +772,7 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['deliveryCharge']
-                                                .toString(),
-                                            style: TextStyle(
-                                              fontFamily: 'Lexend Deca',
-                                              color: Colors.black,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )),
-                                          DataCell(SelectableText(
-                                            data[0]['gst'].toString(),
-                                            style: TextStyle(
-                                              fontFamily: 'Lexend Deca',
-                                              color: Colors.black,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )),
-                                          DataCell(SelectableText(
-                                            data[0]['shippingMethod'],
+                                            data['promoCode'].toString(),
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -395,7 +847,7 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                                 pincode: address['pinCode'],
                                                 state: address['state'],
                                                 orderId: widget.id,
-                                                customerId: data[0]['userId'],
+                                                customerId: data['userId'],
                                                 city: address['city'],
                                               );
                                             });
@@ -472,27 +924,26 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                     ),
                                   ],
                                   rows: List.generate(
-                                    data.length,
+                                    1,
                                     (index) {
                                       String name =
-                                          data[0]['shippingAddress']['name'];
+                                          data['shippingAddress']['name'];
                                       String address =
-                                          data[0]['shippingAddress']['address'];
-                                      String number = data[0]['shippingAddress']
+                                          data['shippingAddress']['address'];
+                                      String number = data['shippingAddress']
                                           ['mobileNumber'];
-                                      String anumber = data[0]
-                                              ['shippingAddress']
+                                      String anumber = data['shippingAddress']
                                           ['alternativePhone'];
                                       String city =
-                                          data[0]['shippingAddress']['city'];
+                                          data['shippingAddress']['city'];
                                       String area =
-                                          data[0]['shippingAddress']['area'];
+                                          data['shippingAddress']['area'];
                                       String pincode =
-                                          data[0]['shippingAddress']['pinCode'];
+                                          data['shippingAddress']['pinCode'];
                                       String state =
-                                          data[0]['shippingAddress']['state'];
-                                      String landmark = data[0]
-                                          ['shippingAddress']['landMark'];
+                                          data['shippingAddress']['state'];
+                                      String landmark =
+                                          data['shippingAddress']['landMark'];
                                       // Timestamp placedDate = data[0]['shippingAddress']['placedDate'];
                                       return DataRow(
                                         color: index.isOdd
@@ -855,33 +1306,36 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                           padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
                           child: Column(
                             children: [
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 80),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            'Product Total (${items.length}) items',
-                                            style: TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          SizedBox(
-                                            width: 50,
-                                          ),
-                                          Text('\₹'+sum.toString() ,style: TextStyle(
-                                              fontSize:15,
-                                              fontWeight: FontWeight.bold),),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              // Padding(
+                              //   padding: EdgeInsets.all(8.0),
+                              //   child: Row(
+                              //     mainAxisAlignment: MainAxisAlignment.end,
+                              //     children: [
+                              //       Padding(
+                              //         padding: const EdgeInsets.only(right: 80),
+                              //         child: Row(
+                              //           children: [
+                              //             Text(
+                              //               'Product Total (${items.length}) items',
+                              //               style: TextStyle(
+                              //                   fontSize: 15,
+                              //                   fontWeight: FontWeight.bold),
+                              //             ),
+                              //             SizedBox(
+                              //               width: 50,
+                              //             ),
+                              //             Text(
+                              //               '\₹$sum',
+                              //               style: TextStyle(
+                              //                   fontSize: 15,
+                              //                   fontWeight: FontWeight.bold),
+                              //             ),
+                              //           ],
+                              //         ),
+                              //       ),
+                              //     ],
+                              //   ),
+                              // ),
                               // Padding(
                               //   padding: EdgeInsets.all(8.0),
                               //   child: Row(
@@ -907,6 +1361,125 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                               //     ],
                               //   ),
                               // ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 80),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Discount',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    Text(
+                                      '\₹${data['discount']}',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 80),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Delivery charge',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    Text(
+                                      '\₹${data['deliveryCharge']}',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              Padding(
+                                padding: const EdgeInsets.only(right: 80),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Total (excel.GST)',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    Text(
+                                      '\₹${data['total'].toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 80),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'GST:',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    Text(
+                                      '\₹${data['gst'].toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              data['shippingMethod'] == 'Cash On Delivery'
+                                  ? Padding(
+                                      padding: const EdgeInsets.only(right: 80),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            'COD Charge:',
+                                            style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          SizedBox(
+                                            width: 50,
+                                          ),
+                                          Text(
+                                            '\₹ 33.00',
+                                            style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  : SizedBox(),
                               Padding(
                                 padding: EdgeInsets.all(8.0),
                                 child: Row(
@@ -943,14 +1516,16 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                             style: TextStyle(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold),
-
                                           ),
                                           SizedBox(
                                             width: 30,
                                           ),
-                                          Text('\₹'+sum.toString() ,style: TextStyle(
-                                              fontSize:15,
-                                              fontWeight: FontWeight.bold),),
+                                          Text(
+                                            '\₹'+data['price'].toString(),
+                                            style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold),
+                                          ),
                                         ],
                                       ),
                                     )

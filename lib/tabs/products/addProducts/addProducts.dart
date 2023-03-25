@@ -1,15 +1,19 @@
 import 'dart:async';
-import 'package:cached_network_image/cached_network_image.dart';
+
+import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-// import 'package:searchable_dropdown/searchable_dropdown.dart';
 import 'package:tharacart_web/widgets/button.dart';
-import '../../../widgets/uploadmedia.dart';
-import '../../widgets/storage.dart';
-import '../dashboard/dashboard.dart';
-Map<String,dynamic> newList={};
-List groupNames=[];
+import '../../../../widgets/uploadmedia.dart';
+import '../../../widgets/storage.dart';
+import '../../dashboard/dashboard.dart';
+import 'b2bDialogueBox.dart';
+import 'b2cDialogueBox.dart';
+
+Map<String, dynamic> newList = {};
+List groupNames = [];
+
 class AddProduct extends StatefulWidget {
   AddProduct({Key? key}) : super(key: key);
 
@@ -20,80 +24,82 @@ class AddProduct extends StatefulWidget {
 class _AddProductState extends State<AddProduct> {
   String? uploadedFileUrl1;
   String? videoUrl;
-  bool b2c=false;
-  bool imported=false;
-  bool payOnDelivery=false;
-  bool b2b=false;
-  bool organic=false;
-  Map<String,dynamic> productPricing={};
+  bool b2c = false;
+  bool imported = false;
+  bool payOnDelivery = false;
+  bool b2b = false;
+  bool sales = false;
+  Map<String, dynamic> productPricing = {};
   int? radioButtonValue;
   List<String> _selectedCuisine = [];
   List<Item> products = [];
   List<String> productsList = [];
 
-  List<Map<String,dynamic>> newGroupPriceB2c=[];
-  List<Map<String,dynamic>> newGroupPriceB2b=[];
+  List<Map<String, dynamic>> newGroupPriceB2c = [];
+  List<Map<String, dynamic>> newGroupPriceB2b = [];
 
-  String radioButtonitem='Non Veg';
-  List<Map<String,dynamic>> b2cTierPrice=[];
-  List<Map<String,dynamic>> b2bTierPrice=[];
-  List<Map<String,dynamic>> b2bDelhiTierPrice=[];
+  String radioButtonitem = 'Non Veg';
+  List<Map<String, dynamic>> b2cTierPrice = [];
+  List<Map<String, dynamic>> b2bTierPrice = [];
+  List<Map<String, dynamic>> b2bDelhiTierPrice = [];
 
   late TextEditingController textController1;
   late TextEditingController soldQty;
-  late  TextEditingController b2bP;
+  late TextEditingController b2bP;
   late TextEditingController b2bDelhiP;
   late TextEditingController b2bDelhiD;
-  late  TextEditingController productCode;
-  late  TextEditingController productBrand;
-  late  TextEditingController productDescription;
+  late TextEditingController productCode;
+  late TextEditingController productBrand;
+  late TextEditingController productDescription;
   late TextEditingController b2bd;
   late TextEditingController stock;
   late TextEditingController sold;
   late TextEditingController hsnCode;
-  late  TextEditingController fact;
-  late  TextEditingController weight;
+  late TextEditingController fact;
+  late TextEditingController weight;
   late TextEditingController instructions;
   late TextEditingController madefrom;
   late TextEditingController productIngredients;
   late TextEditingController b2cP;
   late TextEditingController gst;
-  late  TextEditingController b2cD;
+  late TextEditingController b2cD;
   late TextEditingController searchController;
+  late TextEditingController categoryController;
+  late TextEditingController brandController;
   final pageViewController = PageController();
   final scaffoldKey = GlobalKey<ScaffoldState>();
-  List<DropdownMenuItem> fetchedCategories = [];
+  List<String> fetchedCategories = [];
   List<DropdownMenuItem> fetchedShops = [];
   List<DropdownMenuItem> fetchedSubCategory = [];
-  List<DropdownMenuItem> fetchedBrand = [];
+  List<String> fetchedBrand = [];
   String selectedCategory = "";
   int selectedShopIndex = 0;
 
-  String categoryName='';
+  String categoryName = '';
   String selectedSubCategory = "";
   String selectedBrand = "";
   String selectedShop = "";
   List<String> _selectedColors = [];
   List<String> _selectedSize = [];
- // List<CutRecord> _selectedCuts = [];
+  // List<CutRecord> _selectedCuts = [];
 
   QuerySnapshot? subCategories;
-  List<Map<String,dynamic>> unitList = [];
-  List<Map<String,dynamic>> shopList = [];
+  List<Map<String, dynamic>> unitList = [];
+  List<Map<String, dynamic>> shopList = [];
   List<DropdownMenuItem> units = [];
-  String  basicUnit='';
+  String basicUnit = '';
   late TextEditingController startController;
   late TextEditingController stepController;
   late TextEditingController stopController;
-  Map<String,dynamic> brand={};
-  Map<String,dynamic> shops={};
-  Map<String,dynamic> shopDetails={};
+  Map<String, dynamic> brand = {};
+  Map<String, dynamic> shops = {};
+  Map<String, dynamic> shopDetails = {};
 
-  Map<String,dynamic> brandDetails={};
-  Map<String,dynamic> category={};
-  Map<String,dynamic> categoryDetails={};
-  Map<String,dynamic> subCategory={};
-  Map<String,dynamic> subCategoryDetails={};
+  Map<String, dynamic> brandDetails = {};
+  Map<String, dynamic> category = {};
+  Map<String, dynamic> categoryDetails = {};
+  Map<String, dynamic> subCategory = {};
+  Map<String, dynamic> subCategoryDetails = {};
 
   @override
   void initState() {
@@ -103,6 +109,8 @@ class _AddProductState extends State<AddProduct> {
     productCode = TextEditingController();
     productBrand = TextEditingController();
     productDescription = TextEditingController();
+    categoryController = TextEditingController();
+    brandController = TextEditingController();
     b2bd = TextEditingController();
     b2bDelhiP = TextEditingController();
     b2bDelhiD = TextEditingController();
@@ -116,9 +124,8 @@ class _AddProductState extends State<AddProduct> {
     productIngredients = TextEditingController();
     gst = TextEditingController();
 
-
     b2cP = TextEditingController(text: '');
-    b2cD=TextEditingController(text: '');
+    b2cD = TextEditingController(text: '');
     searchController = TextEditingController(text: '');
     startController = TextEditingController(text: '1.0');
     stepController = TextEditingController(text: '1.0');
@@ -159,8 +166,6 @@ class _AddProductState extends State<AddProduct> {
     //     setState(() {});
     //   });
     // }
-
-
   }
   // Future<void>  getCuisine() async {
   //   Stream cus=queryCuisineRecord();
@@ -178,31 +183,26 @@ class _AddProductState extends State<AddProduct> {
   // }
 
   Future getColors() async {
-    QuerySnapshot data1 = await FirebaseFirestore.instance
-        .collection("products").get();
+    QuerySnapshot data1 =
+        await FirebaseFirestore.instance.collection("products").get();
 
     for (var doc in data1.docs) {
-      products.add(
-          Item.build(value: doc.id, display: doc.get('name'), content: doc.get('name'))
-      );
-
+      products.add(Item.build(
+          value: doc.id, display: doc.get('name'), content: doc.get('name')));
     }
     print(products.length);
     print('products*************');
-    if(mounted){
-      setState(() {
-
-      });
+    if (mounted) {
+      setState(() {});
     }
-
-
   }
 
   Future getShops() async {
-    QuerySnapshot data1 = await FirebaseFirestore.instance.collection("shops").get();
+    QuerySnapshot data1 =
+        await FirebaseFirestore.instance.collection("shops").get();
     for (var doc in data1.docs) {
-      shops[doc.get('name')]=doc.get('shopId');
-      shopDetails[doc.get('shopId')]=doc.get('name');
+      shops[doc.get('name')] = doc.get('shopId');
+      shopDetails[doc.get('shopId')] = doc.get('name');
       fetchedShops.add(DropdownMenuItem(
         child: Text(doc.get('name')),
         value: doc.get('name').toString(),
@@ -210,16 +210,15 @@ class _AddProductState extends State<AddProduct> {
       // i++;
     }
     if (mounted) {
-      setState(() {
-      });
+      setState(() {});
     }
   }
 
   Future getUnits() async {
     DocumentSnapshot data1 =
-    await FirebaseFirestore.instance.collection("units").doc("units").get();
-    List<Map<String,dynamic>> temp = [];
-    List<DropdownMenuItem> tempUnit =[];
+        await FirebaseFirestore.instance.collection("units").doc("units").get();
+    List<Map<String, dynamic>> temp = [];
+    List<DropdownMenuItem> tempUnit = [];
     for (var unit in data1.get('unitlist')) {
       unitList.add(unit);
       units.add(DropdownMenuItem(
@@ -293,7 +292,7 @@ class _AddProductState extends State<AddProduct> {
 
   Future getSizes() async {
     DocumentSnapshot data1 =
-    await FirebaseFirestore.instance.collection("sizes").doc("sizes").get();
+        await FirebaseFirestore.instance.collection("sizes").doc("sizes").get();
     // int rowIndex=1;
     for (var size in data1.get('sizeList')) {
       sizes.add(MultipleSelectItem.build(
@@ -307,31 +306,26 @@ class _AddProductState extends State<AddProduct> {
 
   Future getBrands() async {
     QuerySnapshot data1 =
-    await FirebaseFirestore.instance.collection("brands").get();
+        await FirebaseFirestore.instance.collection("brands").get();
     for (var doc in data1.docs) {
-      brand[doc.get('brand')]=doc.get('brandId');
-      brandDetails[doc.get('brandId')]=doc.get('brand');
-      fetchedBrand.add(DropdownMenuItem(
-        child: Text(doc.get('brand')),
-        value: doc.get('brand').toString(),
-      ));
+      brand[doc.get('brand')] = doc.get('brandId');
+      brandDetails[doc.get('brandId')] = doc.get('brand');
+      fetchedBrand.add(doc.get('brand'));
     }
-    if(mounted){
-      setState(() {
-      });
+    if (mounted) {
+      setState(() {});
     }
-
   }
 
   Future getSubCategories() async {
     QuerySnapshot data1 =
-    await FirebaseFirestore.instance.collection("subCategory").get();
+        await FirebaseFirestore.instance.collection("subCategory").get();
     setState(() {
       subCategories = data1;
     });
     for (var doc in data1.docs) {
-      subCategory[doc.get('name')]=doc.get('subCategoryId');
-      subCategoryDetails[doc.get('subCategoryId')]=doc.get('name');
+      subCategory[doc.get('name')] = doc.get('subCategoryId');
+      subCategoryDetails[doc.get('subCategoryId')] = doc.get('name');
       fetchedSubCategory.add(DropdownMenuItem(
         child: Text(doc.get('name')),
         value: doc.get('name').toString(),
@@ -343,12 +337,11 @@ class _AddProductState extends State<AddProduct> {
     List<DropdownMenuItem> subcategories = <DropdownMenuItem>[];
 
     for (var doc in subCategories!.docs) {
-
       if (doc.get('categoryId') == categoryId ||
           categoryId == "" ||
           categoryId == null) {
-        subCategory[doc.get('name')]=doc.get('subCategoryId');
-        subCategoryDetails[doc.get('subCategoryId')]=doc.get('name');
+        subCategory[doc.get('name')] = doc.get('subCategoryId');
+        subCategoryDetails[doc.get('subCategoryId')] = doc.get('name');
         subcategories.add(DropdownMenuItem(
           child: Text(doc.get('name')),
           value: doc.get('name').toString(),
@@ -365,19 +358,13 @@ class _AddProductState extends State<AddProduct> {
 
   Future getCategories() async {
     QuerySnapshot data1 =
-    await FirebaseFirestore.instance.collection("category").get();
+        await FirebaseFirestore.instance.collection("category").get();
     for (var doc in data1.docs) {
-      category[doc.get('name')]=doc.get('categoryId');
-      categoryDetails[doc.get('categoryId')]=doc.get('name');
-      fetchedCategories.add(DropdownMenuItem(
-        child: Text(doc.get('name')),
-        value: doc.get('name').toString(),
-
-      ));
+      category[doc.get('name')] = doc.get('categoryId');
+      categoryDetails[doc.get('categoryId')] = doc.get('name');
+      fetchedCategories.add(doc.get('name'));
     }
   }
-
-
 
   // Future getCuts() async {
   //
@@ -397,7 +384,6 @@ class _AddProductState extends State<AddProduct> {
   // }
   @override
   Widget build(BuildContext context) {
-
     print(selectedShopIndex);
 
     return Scaffold(
@@ -446,8 +432,7 @@ class _AddProductState extends State<AddProduct> {
                 ),
                 Row(
                   mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment:
-                  MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     IconButton(
                       onPressed: () async {
@@ -457,24 +442,18 @@ class _AddProductState extends State<AddProduct> {
                         );
                         if (selectedMedia != null &&
                             validateFileFormat(
-                                selectedMedia.storagePath,
-                                context)) {
-                          showUploadMessage(
-                              context, 'Uploading Image...',
+                                selectedMedia.storagePath, context)) {
+                          showUploadMessage(context, 'Uploading Image...',
                               showLoading: true);
                           final downloadUrl = await uploadData(
-                              selectedMedia.storagePath,
-                              selectedMedia.bytes);
-                          ScaffoldMessenger.of(context)
-                              .hideCurrentSnackBar();
+                              selectedMedia.storagePath, selectedMedia.bytes);
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
                           if (downloadUrl != null) {
-                            setState(() =>
-                            uploadedFileUrl1 = downloadUrl);
-                            showUploadMessage(
-                                context, 'Success!');
+                            setState(() => uploadedFileUrl1 = downloadUrl);
+                            showUploadMessage(context, 'Success!');
                           } else {
-                            showUploadMessage(context,
-                                'Failed to upload media');
+                            showUploadMessage(
+                                context, 'Failed to upload media');
                           }
                         }
                       },
@@ -487,30 +466,21 @@ class _AddProductState extends State<AddProduct> {
                     ),
                     IconButton(
                       onPressed: () async {
-                        final selectedMedia = await selectMedia(
-                            isVideo: true
-                        );
+                        final selectedMedia = await selectMedia(isVideo: true);
                         if (selectedMedia != null &&
                             validateFileFormat(
-
-                                selectedMedia.storagePath,
-                                context)) {
-                          showUploadMessage(
-                              context, 'Uploading Video...',
+                                selectedMedia.storagePath, context)) {
+                          showUploadMessage(context, 'Uploading Video...',
                               showLoading: true);
                           final downloadUrl = await uploadData(
-                              selectedMedia.storagePath,
-                              selectedMedia.bytes);
-                          ScaffoldMessenger.of(context)
-                              .hideCurrentSnackBar();
+                              selectedMedia.storagePath, selectedMedia.bytes);
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
                           if (downloadUrl != null) {
-                            setState(() =>
-                            videoUrl = downloadUrl);
-                            showUploadMessage(context,
-                                'Media upload Success!');
+                            setState(() => videoUrl = downloadUrl);
+                            showUploadMessage(context, 'Media upload Success!');
                           } else {
-                            showUploadMessage(context,
-                                'Failed to upload media');
+                            showUploadMessage(
+                                context, 'Failed to upload media');
                           }
                         }
                       },
@@ -525,10 +495,8 @@ class _AddProductState extends State<AddProduct> {
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-
                   children: [
                     Text('B2C'),
-
                     Switch(
                       value: b2c,
                       onChanged: (value) {
@@ -538,9 +506,10 @@ class _AddProductState extends State<AddProduct> {
                         });
                       },
                     ),
-                    SizedBox(width: 20,),
+                    SizedBox(
+                      width: 20,
+                    ),
                     Text('B2B'),
-
                     Switch(
                       value: b2b,
                       onChanged: (value) {
@@ -553,10 +522,8 @@ class _AddProductState extends State<AddProduct> {
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-
                   children: [
                     Text('Imported'),
-
                     Switch(
                       value: imported,
                       onChanged: (value) {
@@ -566,9 +533,10 @@ class _AddProductState extends State<AddProduct> {
                         });
                       },
                     ),
-                    SizedBox(width: 20,),
+                    SizedBox(
+                      width: 20,
+                    ),
                     Text('Pay On Delivery'),
-
                     Switch(
                       value: payOnDelivery,
                       onChanged: (value) {
@@ -579,25 +547,21 @@ class _AddProductState extends State<AddProduct> {
                     ),
                   ],
                 ),
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.center,
-                //
-                //   children: [
-                //     Text('Organic'),
-                //
-                //     Switch(
-                //       value: organic,
-                //       onChanged: (value) {
-                //         setState(() {
-                //           organic = value;
-                //           print(organic);
-                //         });
-                //       },
-                //     ),
-                //
-                //   ],
-                // ),
-
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Sales'),
+                    Switch(
+                      value: sales,
+                      onChanged: (value) {
+                        setState(() {
+                          sales = value;
+                          print(sales);
+                        });
+                      },
+                    ),
+                  ],
+                ),
                 Padding(
                   padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
                   child: Row(
@@ -609,15 +573,13 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: textController1,
                               obscureText: false,
@@ -628,39 +590,30 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                hintText:
-                                'enter your product name',
+                                hintText: 'enter your product name',
                                 hintStyle: TextStyle(
                                   fontFamily: 'Montserrat',
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -687,58 +640,47 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: productCode,
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'Product Code',
-                                labelStyle:TextStyle(
+                                labelStyle: TextStyle(
                                   fontFamily: 'Montserrat',
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                hintText:
-                                'enter your product Code',
+                                hintText: 'enter your product Code',
                                 hintStyle: TextStyle(
                                   fontFamily: 'Montserrat',
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -765,15 +707,13 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: productDescription,
                               obscureText: false,
@@ -782,51 +722,32 @@ class _AddProductState extends State<AddProduct> {
                                 labelStyle: TextStyle(
                                   fontFamily: 'Montserrat',
                                   color: Color(0xFF8B97A2),
-                                  fontWeight:
-                                  FontWeight.w500,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                hintText:
-                                'enter your product Description',
+                                hintText: 'enter your product Description',
                                 hintStyle: TextStyle(
                                   fontFamily: 'Montserrat',
                                   color: Color(0xFF8B97A2),
-                                  fontWeight:
-                                  FontWeight.w500,
+                                  fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
-                                    color:
-                                    Colors.transparent,
+                                    color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius
-                                      .only(
-                                    topLeft:
-                                    Radius.circular(
-                                        4.0),
-                                    topRight:
-                                    Radius.circular(
-                                        4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
-                                    color:
-                                    Colors.transparent,
+                                    color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius
-                                      .only(
-                                    topLeft:
-                                    Radius.circular(
-                                        4.0),
-                                    topRight:
-                                    Radius.circular(
-                                        4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -842,72 +763,78 @@ class _AddProductState extends State<AddProduct> {
                     ],
                   ),
                 ),
-
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                      vertical: 5.0, horizontal: 0.0),
+                  padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 0.0),
                 ),
-                // Padding(
-                //   padding: const EdgeInsets.all(8.0),
-                //   child: Container(
-                //     width: 330,
-                //     // height: 70,
-                //     decoration: BoxDecoration(
-                //       color: Colors.white,
-                //       borderRadius: BorderRadius.circular(8),
-                //       border: Border.all(
-                //         color: Color(0xFFE6E6E6),
-                //       ),
-                //     ),
-                //     child: SearchableDropdown.single(
-                //       items: fetchedBrand,
-                //       value: selectedBrand,
-                //       hint: "Select Brand",
-                //       searchHint: "Select Brand",
-                //       onChanged: (value) {
-                //         setState(() {
-                //           selectedBrand = value;
-                //           // categoryController.text=value;
-                //         });
-                //       },
-                //       isExpanded: true,
-                //     ),
-                //   ),
-                // ),
                 const Padding(
-                  padding: EdgeInsets.symmetric(
-                      vertical: 10.0, horizontal: 0.0),
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 0.0),
                 ),
-                // Container(
-                //   width: 330,
-                //   // height: 70,
-                //   decoration: BoxDecoration(
-                //     color: Colors.white,
-                //     borderRadius: BorderRadius.circular(8),
-                //     border: Border.all(
-                //       color: Color(0xFFE6E6E6),
-                //     ),
-                //   ),
-                //   child: SearchableDropdown.single(
-                //     items: fetchedCategories,
-                //     value: selectedCategory,
-                //     hint: "Select Category",
-                //     searchHint: "Select Category",
-                //     onChanged: (value) {
-                //       // setState(() {
-                //       //   fetchedSubCategory=<DropdownMenuItem>[];
-                //       //   selectedSubCategory="";
-                //       //   selectedCategory = value;
-                //       //   // categoryController.text=value;
-                //       // });
-                //       getSubCategoriesByCategory(value);
-                //     },
-                //     isExpanded: true,
-                //   ),
-                // ),
+                Row(
+                  children: [
+                    Padding(
+                      padding:
+                          const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 5),
+                      child: Container(
+                        width: 330,
+                        height: 55,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            const BoxShadow(
+                              blurRadius: 2,
+                              color: Color(0x4D101213),
+                              offset: Offset(0, 2),
+                            )
+                          ],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: CustomDropdown.search(
+                          hintText: 'Select Category',
+                          hintStyle: TextStyle(color: Colors.black),
+                          items: fetchedCategories,
+                          controller: categoryController,
+                          excludeSelected: false,
+                          onChanged: (text) {
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding:
+                          const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 5),
+                      child: Container(
+                        width: 330,
+                        height: 55,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            const BoxShadow(
+                              blurRadius: 2,
+                              color: Color(0x4D101213),
+                              offset: Offset(0, 2),
+                            )
+                          ],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: CustomDropdown.search(
+                          hintText: 'Select brand',
+                          hintStyle: TextStyle(color: Colors.black),
+                          items: fetchedBrand,
+                          controller: brandController,
+                          excludeSelected: false,
+                          onChanged: (text) {
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const Padding(
-                  padding: EdgeInsets.symmetric(
-                      vertical: 10.0, horizontal: 0.0),
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 0.0),
                 ),
                 Padding(
                   padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
@@ -920,15 +847,13 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: productIngredients,
                               obscureText: false,
@@ -945,32 +870,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -997,15 +914,13 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: fact,
                               obscureText: false,
@@ -1022,32 +937,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -1074,21 +981,19 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: instructions,
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'Instructions',
-                                labelStyle:TextStyle(
+                                labelStyle: TextStyle(
                                   fontFamily: 'Montserrat',
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
@@ -1099,32 +1004,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -1140,7 +1037,6 @@ class _AddProductState extends State<AddProduct> {
                     ],
                   ),
                 ),
-
                 Padding(
                   padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
                   child: Row(
@@ -1152,15 +1048,13 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: madefrom,
                               obscureText: false,
@@ -1177,32 +1071,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -1224,29 +1110,35 @@ class _AddProductState extends State<AddProduct> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         Radio(
-                          value:"Non Veg",
+                          value: "Non Veg",
                           groupValue: radioButtonitem,
-                          onChanged: (val){
+                          onChanged: (val) {
                             setState(() {
-                              radioButtonitem =val!;
+                              radioButtonitem = val!;
                             });
                           },
                         ),
-                        Text('Non Veg', style: new TextStyle(
-                            color: Colors.black, fontSize: 15),),
+                        Text(
+                          'Non Veg',
+                          style:
+                              new TextStyle(color: Colors.black, fontSize: 15),
+                        ),
                         Radio(
                           value: 'Veg',
                           groupValue: radioButtonitem,
-                          onChanged: (val){
+                          onChanged: (val) {
                             setState(() {
-                              radioButtonitem =val!;
+                              radioButtonitem = val!;
                             });
                           },
-                        ),Text("Veg", style: new TextStyle(
-                            color: Colors.black, fontSize: 15),),
-
-                      ]
-                  ),),
+                        ),
+                        Text(
+                          "Veg",
+                          style:
+                              new TextStyle(color: Colors.black, fontSize: 15),
+                        ),
+                      ]),
+                ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -1264,23 +1156,20 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: b2cP,
                               keyboardType: TextInputType.number,
-
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'price',
-                                labelStyle:TextStyle(
+                                labelStyle: TextStyle(
                                   fontFamily: 'Montserrat',
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
@@ -1291,32 +1180,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -1335,23 +1216,20 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: b2cD,
                               keyboardType: TextInputType.number,
-
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'discount price',
-                                labelStyle:TextStyle(
+                                labelStyle: TextStyle(
                                   fontFamily: 'Montserrat',
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
@@ -1362,32 +1240,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -1420,19 +1290,16 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: b2bP,
                               keyboardType: TextInputType.number,
-
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'price',
@@ -1442,37 +1309,29 @@ class _AddProductState extends State<AddProduct> {
                                   fontWeight: FontWeight.w500,
                                 ),
                                 hintText: 'product price',
-                                hintStyle:TextStyle(
+                                hintStyle: TextStyle(
                                   fontFamily: 'Montserrat',
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -1491,19 +1350,16 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: b2bd,
                               keyboardType: TextInputType.number,
-
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'discount price',
@@ -1518,36 +1374,28 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
-                              style:TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'Montserrat',
                                 color: Color(0xFF8B97A2),
                                 fontWeight: FontWeight.w500,
@@ -1559,364 +1407,340 @@ class _AddProductState extends State<AddProduct> {
                     ],
                   ),
                 ),
+                !b2c
+                    ? Container()
+                    : Column(
+                        children: List.generate(groupNames.length, (index) {
+                        TextEditingController groupPrice$index =
+                            TextEditingController();
+                        TextEditingController groupDiscountPrice$index =
+                            TextEditingController();
 
-                !b2c?Container():  Column(
-                    children: List.generate(groupNames.length, (index) {
-                      TextEditingController groupPrice$index=TextEditingController();
-                      TextEditingController groupDiscountPrice$index=TextEditingController();
-
-
-                      return Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text('B2C ${groupNames[index]} Price'),
-                              ],
+                        return Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('B2C ${groupNames[index]} Price'),
+                                ],
+                              ),
                             ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    width: 330,
-                                    height: 60,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius:
-                                      BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: Color(0xFFE6E6E6),
-                                      ),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                          16, 0, 0, 0),
-                                      child: TextFormField(
-                                        controller: groupPrice$index,
-                                        keyboardType: TextInputType.number,
-                                        onChanged: (text){
-
-                                          productPricing['b2c'+groupNames[index]+'P']=double.tryParse(text);
-                                        },
-                                        obscureText: false,
-                                        decoration: InputDecoration(
-                                          labelText: 'price',
-                                          labelStyle: TextStyle(
-                                            fontFamily: 'Montserrat',
-                                            color: Color(0xFF8B97A2),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          hintText: 'product price',
-                                          hintStyle: TextStyle(
-                                            fontFamily: 'Montserrat',
-                                            color: Color(0xFF8B97A2),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          enabledBorder:
-                                          UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.transparent,
-                                              width: 1,
-                                            ),
-                                            borderRadius:
-                                            const BorderRadius.only(
-                                              topLeft:
-                                              Radius.circular(4.0),
-                                              topRight:
-                                              Radius.circular(4.0),
-                                            ),
-                                          ),
-                                          focusedBorder:
-                                          UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.transparent,
-                                              width: 1,
-                                            ),
-                                            borderRadius:
-                                            const BorderRadius.only(
-                                              topLeft:
-                                              Radius.circular(4.0),
-                                              topRight:
-                                              Radius.circular(4.0),
-                                            ),
-                                          ),
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      width: 330,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Color(0xFFE6E6E6),
                                         ),
-                                        style: TextStyle(
-                                          fontFamily: 'Montserrat',
-                                          color: Color(0xFF8B97A2),
-                                          fontWeight: FontWeight.w500,
+                                      ),
+                                      child: Padding(
+                                        padding:
+                                            EdgeInsets.fromLTRB(16, 0, 0, 0),
+                                        child: TextFormField(
+                                          controller: groupPrice$index,
+                                          keyboardType: TextInputType.number,
+                                          onChanged: (text) {
+                                            productPricing['b2c' +
+                                                groupNames[index] +
+                                                'P'] = double.tryParse(text);
+                                          },
+                                          obscureText: false,
+                                          decoration: InputDecoration(
+                                            labelText: 'price',
+                                            labelStyle: TextStyle(
+                                              fontFamily: 'Montserrat',
+                                              color: Color(0xFF8B97A2),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            hintText: 'product price',
+                                            hintStyle: TextStyle(
+                                              fontFamily: 'Montserrat',
+                                              color: Color(0xFF8B97A2),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            enabledBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                topLeft: Radius.circular(4.0),
+                                                topRight: Radius.circular(4.0),
+                                              ),
+                                            ),
+                                            focusedBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                topLeft: Radius.circular(4.0),
+                                                topRight: Radius.circular(4.0),
+                                              ),
+                                            ),
+                                          ),
+                                          style: TextStyle(
+                                            fontFamily: 'Montserrat',
+                                            color: Color(0xFF8B97A2),
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    width: 330,
-                                    height: 60,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius:
-                                      BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: Color(0xFFE6E6E6),
-                                      ),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                          16, 0, 0, 0),
-                                      child: TextFormField(
-                                        onChanged : (text){
-                                          productPricing['b2c'+groupNames[index]+'D']=double.tryParse(text);
-
-                                        },
-                                        controller: groupDiscountPrice$index,
-                                        keyboardType: TextInputType.number,
-
-                                        obscureText: false,
-                                        decoration: InputDecoration(
-                                          labelText: 'discount price',
-                                          labelStyle:TextStyle(
-                                            fontFamily: 'Montserrat',
-                                            color: Color(0xFF8B97A2),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          hintText: 'discount price',
-                                          hintStyle: TextStyle(
-                                            fontFamily: 'Montserrat',
-                                            color: Color(0xFF8B97A2),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          enabledBorder:
-                                          UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.transparent,
-                                              width: 1,
-                                            ),
-                                            borderRadius:
-                                            const BorderRadius.only(
-                                              topLeft:
-                                              Radius.circular(4.0),
-                                              topRight:
-                                              Radius.circular(4.0),
-                                            ),
-                                          ),
-                                          focusedBorder:
-                                          UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.transparent,
-                                              width: 1,
-                                            ),
-                                            borderRadius:
-                                            const BorderRadius.only(
-                                              topLeft:
-                                              Radius.circular(4.0),
-                                              topRight:
-                                              Radius.circular(4.0),
-                                            ),
-                                          ),
+                                  Expanded(
+                                    child: Container(
+                                      width: 330,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Color(0xFFE6E6E6),
                                         ),
-                                        style: TextStyle(
-                                          fontFamily: 'Montserrat',
-                                          color: Color(0xFF8B97A2),
-                                          fontWeight: FontWeight.w500,
+                                      ),
+                                      child: Padding(
+                                        padding:
+                                            EdgeInsets.fromLTRB(16, 0, 0, 0),
+                                        child: TextFormField(
+                                          onChanged: (text) {
+                                            productPricing['b2c' +
+                                                groupNames[index] +
+                                                'D'] = double.tryParse(text);
+                                          },
+                                          controller: groupDiscountPrice$index,
+                                          keyboardType: TextInputType.number,
+                                          obscureText: false,
+                                          decoration: InputDecoration(
+                                            labelText: 'discount price',
+                                            labelStyle: TextStyle(
+                                              fontFamily: 'Montserrat',
+                                              color: Color(0xFF8B97A2),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            hintText: 'discount price',
+                                            hintStyle: TextStyle(
+                                              fontFamily: 'Montserrat',
+                                              color: Color(0xFF8B97A2),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            enabledBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                topLeft: Radius.circular(4.0),
+                                                topRight: Radius.circular(4.0),
+                                              ),
+                                            ),
+                                            focusedBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                topLeft: Radius.circular(4.0),
+                                                topRight: Radius.circular(4.0),
+                                              ),
+                                            ),
+                                          ),
+                                          style: TextStyle(
+                                            fontFamily: 'Montserrat',
+                                            color: Color(0xFF8B97A2),
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
+                          ],
+                        );
+                      })),
+                !b2b
+                    ? Container()
+                    : Column(
+                        children: List.generate(groupNames.length, (index) {
+                        TextEditingController group$Price =
+                            TextEditingController();
+                        TextEditingController group$DiscountPrice =
+                            TextEditingController();
 
-                        ],
-                      );
-                    })
-                ),
-                !b2b?Container():  Column(
-                    children: List.generate(groupNames.length, (index) {
-                      TextEditingController group$Price=TextEditingController();
-                      TextEditingController group$DiscountPrice=TextEditingController();
-
-                      return Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text('B2B ${groupNames[index]} Price'),
-                              ],
+                        return Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('B2B ${groupNames[index]} Price'),
+                                ],
+                              ),
                             ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    width: 330,
-                                    height: 60,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius:
-                                      BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: Color(0xFFE6E6E6),
-                                      ),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.fromLTRB(
-                                          16, 0, 0, 0),
-                                      child: TextFormField(
-                                        controller: group$Price,
-                                        keyboardType: TextInputType.number,
-                                        onChanged: (text){
-
-                                          productPricing['b2b'+groupNames[index]+'P']=double.tryParse(text);
-                                        },
-                                        obscureText: false,
-                                        decoration: InputDecoration(
-                                          labelText: 'price',
-                                          labelStyle: TextStyle(
-                                            fontFamily: 'Montserrat',
-                                            color: Color(0xFF8B97A2),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          hintText: 'product price',
-                                          hintStyle: TextStyle(
-                                            fontFamily: 'Montserrat',
-                                            color: Color(0xFF8B97A2),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          enabledBorder:
-                                          UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.transparent,
-                                              width: 1,
-                                            ),
-                                            borderRadius:
-                                            const BorderRadius.only(
-                                              topLeft:
-                                              Radius.circular(4.0),
-                                              topRight:
-                                              Radius.circular(4.0),
-                                            ),
-                                          ),
-                                          focusedBorder:
-                                          UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.transparent,
-                                              width: 1,
-                                            ),
-                                            borderRadius:
-                                            const BorderRadius.only(
-                                              topLeft:
-                                              Radius.circular(4.0),
-                                              topRight:
-                                              Radius.circular(4.0),
-                                            ),
-                                          ),
+                            Padding(
+                              padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      width: 330,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Color(0xFFE6E6E6),
                                         ),
-                                        style: TextStyle(
-                                          fontFamily: 'Montserrat',
-                                          color: Color(0xFF8B97A2),
-                                          fontWeight: FontWeight.w500,
+                                      ),
+                                      child: Padding(
+                                        padding:
+                                            EdgeInsets.fromLTRB(16, 0, 0, 0),
+                                        child: TextFormField(
+                                          controller: group$Price,
+                                          keyboardType: TextInputType.number,
+                                          onChanged: (text) {
+                                            productPricing['b2b' +
+                                                groupNames[index] +
+                                                'P'] = double.tryParse(text);
+                                          },
+                                          obscureText: false,
+                                          decoration: InputDecoration(
+                                            labelText: 'price',
+                                            labelStyle: TextStyle(
+                                              fontFamily: 'Montserrat',
+                                              color: Color(0xFF8B97A2),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            hintText: 'product price',
+                                            hintStyle: TextStyle(
+                                              fontFamily: 'Montserrat',
+                                              color: Color(0xFF8B97A2),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            enabledBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                topLeft: Radius.circular(4.0),
+                                                topRight: Radius.circular(4.0),
+                                              ),
+                                            ),
+                                            focusedBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                topLeft: Radius.circular(4.0),
+                                                topRight: Radius.circular(4.0),
+                                              ),
+                                            ),
+                                          ),
+                                          style: TextStyle(
+                                            fontFamily: 'Montserrat',
+                                            color: Color(0xFF8B97A2),
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    width: 330,
-                                    height: 60,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius:
-                                      BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: Color(0xFFE6E6E6),
-                                      ),
-                                    ),
-                                    child: Padding(
-                                      padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
-                                      child: TextFormField(
-                                        controller: group$DiscountPrice,
-                                        keyboardType: TextInputType.number,
-                                        onChanged: (text){
-
-                                          productPricing['b2b'+groupNames[index]+'D']=double.tryParse(text);
-                                        },
-                                        obscureText: false,
-                                        decoration: InputDecoration(
-                                          labelText: 'discount price',
-                                          labelStyle: TextStyle(
-                                            fontFamily: 'Montserrat',
-                                            color: Color(0xFF8B97A2),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          hintText: 'discount price',
-                                          hintStyle: TextStyle(
-                                            fontFamily: 'Montserrat',
-                                            color: Color(0xFF8B97A2),
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                          enabledBorder:
-                                          UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.transparent,
-                                              width: 1,
-                                            ),
-                                            borderRadius:
-                                            const BorderRadius.only(
-                                              topLeft:
-                                              Radius.circular(4.0),
-                                              topRight:
-                                              Radius.circular(4.0),
-                                            ),
-                                          ),
-                                          focusedBorder:
-                                          UnderlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: Colors.transparent,
-                                              width: 1,
-                                            ),
-                                            borderRadius:
-                                            const BorderRadius.only(
-                                              topLeft:
-                                              Radius.circular(4.0),
-                                              topRight:
-                                              Radius.circular(4.0),
-                                            ),
-                                          ),
+                                  Expanded(
+                                    child: Container(
+                                      width: 330,
+                                      height: 60,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Color(0xFFE6E6E6),
                                         ),
-                                        style: TextStyle(
-                                          fontFamily: 'Montserrat',
-                                          color: Color(0xFF8B97A2),
-                                          fontWeight: FontWeight.w500,
+                                      ),
+                                      child: Padding(
+                                        padding:
+                                            EdgeInsets.fromLTRB(16, 0, 0, 0),
+                                        child: TextFormField(
+                                          controller: group$DiscountPrice,
+                                          keyboardType: TextInputType.number,
+                                          onChanged: (text) {
+                                            productPricing['b2b' +
+                                                groupNames[index] +
+                                                'D'] = double.tryParse(text);
+                                          },
+                                          obscureText: false,
+                                          decoration: InputDecoration(
+                                            labelText: 'discount price',
+                                            labelStyle: TextStyle(
+                                              fontFamily: 'Montserrat',
+                                              color: Color(0xFF8B97A2),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            hintText: 'discount price',
+                                            hintStyle: TextStyle(
+                                              fontFamily: 'Montserrat',
+                                              color: Color(0xFF8B97A2),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                            enabledBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                topLeft: Radius.circular(4.0),
+                                                topRight: Radius.circular(4.0),
+                                              ),
+                                            ),
+                                            focusedBorder: UnderlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: Colors.transparent,
+                                                width: 1,
+                                              ),
+                                              borderRadius:
+                                                  const BorderRadius.only(
+                                                topLeft: Radius.circular(4.0),
+                                                topRight: Radius.circular(4.0),
+                                              ),
+                                            ),
+                                          ),
+                                          style: TextStyle(
+                                            fontFamily: 'Montserrat',
+                                            color: Color(0xFF8B97A2),
+                                            fontWeight: FontWeight.w500,
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-
-                        ],
-                      );
-                    })
-                ),
-
-
+                          ],
+                        );
+                      })),
                 Padding(
                   padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
                   child: Row(
@@ -1928,23 +1752,20 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: stock,
                               keyboardType: TextInputType.number,
-
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'Stock',
-                                labelStyle:TextStyle(
+                                labelStyle: TextStyle(
                                   fontFamily: 'Montserrat',
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
@@ -1955,32 +1776,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -1999,19 +1812,16 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: sold,
                               keyboardType: TextInputType.number,
-
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'Sold',
@@ -2026,32 +1836,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -2067,32 +1869,27 @@ class _AddProductState extends State<AddProduct> {
                     ],
                   ),
                 ),
-
                 Padding(
                   padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
                   child: Row(
                     mainAxisSize: MainAxisSize.max,
                     children: [
-
                       Expanded(
                         child: Container(
                           width: 330,
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: hsnCode,
                               keyboardType: TextInputType.number,
-
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'HSN Code',
@@ -2107,32 +1904,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -2151,19 +1940,16 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: weight,
                               keyboardType: TextInputType.number,
-
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'Weight',
@@ -2178,32 +1964,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -2222,19 +2000,16 @@ class _AddProductState extends State<AddProduct> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                            BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: Color(0xFFE6E6E6),
                             ),
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                                16, 0, 0, 0),
+                            padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
                             child: TextFormField(
                               controller: gst,
                               keyboardType: TextInputType.number,
-
                               obscureText: false,
                               decoration: InputDecoration(
                                 labelText: 'GST',
@@ -2249,32 +2024,24 @@ class _AddProductState extends State<AddProduct> {
                                   color: Color(0xFF8B97A2),
                                   fontWeight: FontWeight.w500,
                                 ),
-                                enabledBorder:
-                                UnderlineInputBorder(
+                                enabledBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
-                                focusedBorder:
-                                UnderlineInputBorder(
+                                focusedBorder: UnderlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.transparent,
                                     width: 1,
                                   ),
-                                  borderRadius:
-                                  const BorderRadius.only(
-                                    topLeft:
-                                    Radius.circular(4.0),
-                                    topRight:
-                                    Radius.circular(4.0),
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(4.0),
+                                    topRight: Radius.circular(4.0),
                                   ),
                                 ),
                               ),
@@ -2290,31 +2057,33 @@ class _AddProductState extends State<AddProduct> {
                     ],
                   ),
                 ),
-
-
-
-
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text('B2C Tier Price',
-                    style: TextStyle(fontWeight: FontWeight.w600),),
+                  child: Text(
+                    'B2C Tier Price',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10,10,10,0),
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
                   child: Container(
-
                     child: ListView.builder(
                         physics: NeverScrollableScrollPhysics(),
                         padding: EdgeInsets.zero,
                         scrollDirection: Axis.vertical,
                         shrinkWrap: true,
-                        itemCount: b2cTierPrice.length+1,
-                        itemBuilder: (context,index){
-                          TextEditingController admin$index=TextEditingController();
+                        itemCount: b2cTierPrice.length + 1,
+                        itemBuilder: (context, index) {
+                          TextEditingController admin$index =
+                              TextEditingController();
                           // admin$index.text=index==(admins1.length)?"":admins1[index]['addOn'];
-                          String name=index==(b2cTierPrice.length)?"":b2cTierPrice[index]['name'];
-                          String price=index==(b2cTierPrice.length)?"":b2cTierPrice[index]['price'];
-                          return    Padding(
+                          String name = index == (b2cTierPrice.length)
+                              ? ""
+                              : b2cTierPrice[index]['name'];
+                          String price = index == (b2cTierPrice.length)
+                              ? ""
+                              : b2cTierPrice[index]['price'];
+                          return Padding(
                             padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
                             child: Container(
                               width: 350,
@@ -2330,22 +2099,21 @@ class _AddProductState extends State<AddProduct> {
                                 padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(name),
                                     Text(price),
-
                                     IconButton(
                                         onPressed: () async {
-
-                                          if(index==(b2cTierPrice.length)){
-                                            Map<String,dynamic> selected=  await    showDialog(
-                                                context: context,
-                                                builder: (context) {
-                                                  return SizedBox();
-                                                 //   B2cDialogue();
-                                                });
-                                            if(selected!=null) {
+                                          if (index == (b2cTierPrice.length)) {
+                                            Map<String, dynamic> selected =
+                                                await showDialog(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      return B2cDialogue();
+                                                    });
+                                            if (selected != null) {
                                               b2cTierPrice.add(selected);
                                             }
                                             setState(() {
@@ -2355,20 +2123,15 @@ class _AddProductState extends State<AddProduct> {
                                               //   'imageUrl':admins1[index]['imageUrl']
                                               // });
                                               // print(addon.length);
-
                                             });
-                                          }else
-                                          {
-
+                                          } else {
                                             b2cTierPrice.removeAt(index);
-                                            setState(() {
-
-                                            });
-
+                                            setState(() {});
                                           }
-
-                                        }, icon: index==(b2cTierPrice.length)?Icon(Icons.add):
-                                    Icon(Icons.delete))
+                                        },
+                                        icon: index == (b2cTierPrice.length)
+                                            ? Icon(Icons.add)
+                                            : Icon(Icons.delete))
                                   ],
                                 ),
                               ),
@@ -2379,25 +2142,31 @@ class _AddProductState extends State<AddProduct> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: Text('B2B Tier Price',
-                    style: TextStyle(fontWeight: FontWeight.w600),),
+                  child: Text(
+                    'B2B Tier Price',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10,10,10,0),
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
                   child: Container(
-
                     child: ListView.builder(
                         physics: NeverScrollableScrollPhysics(),
                         padding: EdgeInsets.zero,
                         scrollDirection: Axis.vertical,
                         shrinkWrap: true,
-                        itemCount: b2bTierPrice.length+1,
-                        itemBuilder: (context,index){
-                          TextEditingController admin$index1=TextEditingController();
+                        itemCount: b2bTierPrice.length + 1,
+                        itemBuilder: (context, index) {
+                          TextEditingController admin$index1 =
+                              TextEditingController();
                           // admin$index.text=index==(admins1.length)?"":admins1[index]['addOn'];
-                          String name=index==(b2bTierPrice.length)?"":b2bTierPrice[index]['name'];
-                          String price=index==(b2bTierPrice.length)?"":b2bTierPrice[index]['price'];
-                          return    Padding(
+                          String name = index == (b2bTierPrice.length)
+                              ? ""
+                              : b2bTierPrice[index]['name'];
+                          String price = index == (b2bTierPrice.length)
+                              ? ""
+                              : b2bTierPrice[index]['price'];
+                          return Padding(
                             padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
                             child: Container(
                               width: 350,
@@ -2413,23 +2182,23 @@ class _AddProductState extends State<AddProduct> {
                                 padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(name),
                                     Text(price),
-
                                     IconButton(
                                         onPressed: () async {
-
-                                          if(index==(b2bTierPrice.length)){
-                                            // Map<String,dynamic> selected1=  await    showDialog(
-                                            //     context: context,
-                                            //     builder: (context) {
-                                            //       return B2bDialogue();
-                                            //     });
-                                            // if(selected1!=null) {
-                                            //   b2bTierPrice.add(selected1);
-                                            // }
+                                          if (index == (b2bTierPrice.length)) {
+                                            Map<String, dynamic> selected1 =
+                                                await showDialog(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      return B2bDialogue();
+                                                    });
+                                            if (selected1 != null) {
+                                              b2bTierPrice.add(selected1);
+                                            }
                                             setState(() {
                                               // addon.add({
                                               // 'addOn':admins1[index]['addOn'],
@@ -2437,20 +2206,15 @@ class _AddProductState extends State<AddProduct> {
                                               //   'imageUrl':admins1[index]['imageUrl']
                                               // });
                                               // print(addon.length);
-
                                             });
-                                          }else
-                                          {
-
+                                          } else {
                                             b2bTierPrice.removeAt(index);
-                                            setState(() {
-
-                                            });
-
+                                            setState(() {});
                                           }
-
-                                        }, icon: index==(b2bTierPrice.length)?Icon(Icons.add):
-                                    Icon(Icons.delete))
+                                        },
+                                        icon: index == (b2bTierPrice.length)
+                                            ? Icon(Icons.add)
+                                            : Icon(Icons.delete))
                                   ],
                                 ),
                               ),
@@ -2459,224 +2223,244 @@ class _AddProductState extends State<AddProduct> {
                         }),
                   ),
                 ),
-                !b2b?Container():    Column(
-                    children: List.generate(groupNames.length, (index) {
+                !b2b
+                    ? Container()
+                    : Column(
+                        children: List.generate(groupNames.length, (index) {
+                        String group = groupNames[index];
 
-                      String group=groupNames[index];
-
-
-                      List<Map<String,dynamic>> tierPricing$index=productPricing['b2b'+group+'Tier']??[];
-                      return   Column(
-
-                          children:[
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text('B2B $group Tier Price',
-                                style: TextStyle(fontWeight: FontWeight.w600),),
+                        List<Map<String, dynamic>> tierPricing$index =
+                            productPricing['b2b' + group + 'Tier'] ?? [];
+                        return Column(children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'B2B $group Tier Price',
+                              style: TextStyle(fontWeight: FontWeight.w600),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(10,10,10,0),
-                              child: Container(
-
-                                child: ListView.builder(
-                                    physics: NeverScrollableScrollPhysics(),
-                                    padding: EdgeInsets.zero,
-                                    scrollDirection: Axis.vertical,
-                                    shrinkWrap: true,
-                                    itemCount: tierPricing$index.length+1,
-                                    itemBuilder: (context,index){
-                                      TextEditingController admin$index1=TextEditingController();
-                                      // admin$index.text=index==(admins1.length)?"":admins1[index]['addOn'];
-                                      String name=index==(tierPricing$index.length)?"":tierPricing$index[index]['name'];
-                                      String price=index==(tierPricing$index.length)?"":tierPricing$index[index]['price'];
-                                      return    Padding(
-                                        padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
-                                        child: Container(
-                                          width: 350,
-                                          height: 50,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(10),
-                                            border: Border.all(
-                                              color: Color(0x8A242222),
-                                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                            child: Container(
+                              child: ListView.builder(
+                                  physics: NeverScrollableScrollPhysics(),
+                                  padding: EdgeInsets.zero,
+                                  scrollDirection: Axis.vertical,
+                                  shrinkWrap: true,
+                                  itemCount: tierPricing$index.length + 1,
+                                  itemBuilder: (context, index) {
+                                    TextEditingController admin$index1 =
+                                        TextEditingController();
+                                    // admin$index.text=index==(admins1.length)?"":admins1[index]['addOn'];
+                                    String name =
+                                        index == (tierPricing$index.length)
+                                            ? ""
+                                            : tierPricing$index[index]['name'];
+                                    String price =
+                                        index == (tierPricing$index.length)
+                                            ? ""
+                                            : tierPricing$index[index]['price'];
+                                    return Padding(
+                                      padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
+                                      child: Container(
+                                        width: 350,
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: Color(0x8A242222),
                                           ),
-                                          child: Padding(
-                                            padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.max,
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Text(name),
-                                                Text(price),
-
-                                                IconButton(
-                                                    onPressed: () async {
-
-                                                      if(index==(tierPricing$index.length)){
-                                                        Map<String,dynamic> selected1=  await    showDialog(
-                                                            context: context,
-                                                            builder: (context) {
-                                                              return SizedBox();
+                                        ),
+                                        child: Padding(
+                                          padding:
+                                              EdgeInsets.fromLTRB(10, 0, 0, 0),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.max,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(name),
+                                              Text(price),
+                                              IconButton(
+                                                  onPressed: () async {
+                                                    if (index ==
+                                                        (tierPricing$index
+                                                            .length)) {
+                                                      Map<String, dynamic>
+                                                          selected1 =
+                                                          await showDialog(
+                                                              context: context,
+                                                              builder:
+                                                                  (context) {
+                                                                return SizedBox();
                                                                 // B2bDelhiDialogue(groupName: group,b2b: true,);
-                                                            });
-                                                        if(selected1!=null) {
-                                                          tierPricing$index.add(selected1);
-                                                          productPricing['b2b'+group+'Tier']=tierPricing$index;
-                                                        }
-                                                        setState(() {
-                                                          // addon.add({
-                                                          // 'addOn':admins1[index]['addOn'],
-                                                          //   'addOnArabic':admins1[index]['addOnArabic'],
-                                                          //   'imageUrl':admins1[index]['imageUrl']
-                                                          // });
-                                                          // print(addon.length);
-
-                                                        });
-                                                      }else
-                                                      {
-
-                                                        tierPricing$index.removeAt(index);
-                                                        setState(() {
-
-                                                        });
-
+                                                              });
+                                                      if (selected1 != null) {
+                                                        tierPricing$index
+                                                            .add(selected1);
+                                                        productPricing['b2b' +
+                                                                group +
+                                                                'Tier'] =
+                                                            tierPricing$index;
                                                       }
-
-                                                    }, icon: index==(tierPricing$index.length)?Icon(Icons.add):
-                                                Icon(Icons.delete))
-                                              ],
-                                            ),
+                                                      setState(() {
+                                                        // addon.add({
+                                                        // 'addOn':admins1[index]['addOn'],
+                                                        //   'addOnArabic':admins1[index]['addOnArabic'],
+                                                        //   'imageUrl':admins1[index]['imageUrl']
+                                                        // });
+                                                        // print(addon.length);
+                                                      });
+                                                    } else {
+                                                      tierPricing$index
+                                                          .removeAt(index);
+                                                      setState(() {});
+                                                    }
+                                                  },
+                                                  icon: index ==
+                                                          (tierPricing$index
+                                                              .length)
+                                                      ? Icon(Icons.add)
+                                                      : Icon(Icons.delete))
+                                            ],
                                           ),
                                         ),
-                                      );
-                                    }),
-                              ),
+                                      ),
+                                    );
+                                  }),
                             ),
-                          ]);
-                    })
-                ),
-                !b2c?Container(): Column(
-                    children: List.generate(groupNames.length, (index) {
-                      String group=groupNames[index];
-                      List<Map<String,dynamic>> tierPricing$index=productPricing['b2c'+group+'Tier']??[];
+                          ),
+                        ]);
+                      })),
+                !b2c
+                    ? Container()
+                    : Column(
+                        children: List.generate(groupNames.length, (index) {
+                        String group = groupNames[index];
+                        List<Map<String, dynamic>> tierPricing$index =
+                            productPricing['b2c' + group + 'Tier'] ?? [];
 
-                      return   Column(
-
-                          children:[
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text('B2C $group Tier Price',
-                                style: TextStyle(fontWeight: FontWeight.w600),),
+                        return Column(children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'B2C $group Tier Price',
+                              style: TextStyle(fontWeight: FontWeight.w600),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(10,10,10,0),
-                              child: Container(
-
-                                child: ListView.builder(
-                                    physics: NeverScrollableScrollPhysics(),
-                                    padding: EdgeInsets.zero,
-                                    scrollDirection: Axis.vertical,
-                                    shrinkWrap: true,
-                                    itemCount: tierPricing$index.length+1,
-                                    itemBuilder: (context,index){
-                                      TextEditingController admin$index1=TextEditingController();
-                                      // admin$index.text=index==(admins1.length)?"":admins1[index]['addOn'];
-                                      String name=index==(tierPricing$index.length)?"":tierPricing$index[index]['name'];
-                                      String price=index==(tierPricing$index.length)?"":tierPricing$index[index]['price'];
-                                      return    Padding(
-                                        padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
-                                        child: Container(
-                                          width: 350,
-                                          height: 50,
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(10),
-                                            border: Border.all(
-                                              color: Color(0x8A242222),
-                                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                            child: Container(
+                              child: ListView.builder(
+                                  physics: NeverScrollableScrollPhysics(),
+                                  padding: EdgeInsets.zero,
+                                  scrollDirection: Axis.vertical,
+                                  shrinkWrap: true,
+                                  itemCount: tierPricing$index.length + 1,
+                                  itemBuilder: (context, index) {
+                                    TextEditingController admin$index1 =
+                                        TextEditingController();
+                                    // admin$index.text=index==(admins1.length)?"":admins1[index]['addOn'];
+                                    String name =
+                                        index == (tierPricing$index.length)
+                                            ? ""
+                                            : tierPricing$index[index]['name'];
+                                    String price =
+                                        index == (tierPricing$index.length)
+                                            ? ""
+                                            : tierPricing$index[index]['price'];
+                                    return Padding(
+                                      padding: EdgeInsets.fromLTRB(0, 5, 0, 0),
+                                      child: Container(
+                                        width: 350,
+                                        height: 50,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: Color(0x8A242222),
                                           ),
-                                          child: Padding(
-                                            padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.max,
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Text(name),
-                                                Text(price),
-
-                                                IconButton(
-                                                    onPressed: () async {
-
-                                                      if(index==(tierPricing$index.length)){
-                                                        Map<String,dynamic> selected1=  await    showDialog(
-                                                            context: context,
-                                                            builder: (context) {
-                                                              return SizedBox();
+                                        ),
+                                        child: Padding(
+                                          padding:
+                                              EdgeInsets.fromLTRB(10, 0, 0, 0),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.max,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(name),
+                                              Text(price),
+                                              IconButton(
+                                                  onPressed: () async {
+                                                    if (index ==
+                                                        (tierPricing$index
+                                                            .length)) {
+                                                      Map<String, dynamic>
+                                                          selected1 =
+                                                          await showDialog(
+                                                              context: context,
+                                                              builder:
+                                                                  (context) {
+                                                                return SizedBox();
                                                                 //B2bDelhiDialogue(groupName: group,b2b: false,);
-                                                            });
-                                                        if(selected1!=null) {
-                                                          tierPricing$index.add(selected1);
-                                                          productPricing['b2c'+group+'Tier']=tierPricing$index;
-
-                                                        }
-                                                        setState(() {
-                                                          // addon.add({
-                                                          // 'addOn':admins1[index]['addOn'],
-                                                          //   'addOnArabic':admins1[index]['addOnArabic'],
-                                                          //   'imageUrl':admins1[index]['imageUrl']
-                                                          // });
-                                                          // print(addon.length);
-
-                                                        });
-                                                      }else
-                                                      {
-
-                                                        tierPricing$index.removeAt(index);
-                                                        setState(() {
-
-                                                        });
-
+                                                              });
+                                                      if (selected1 != null) {
+                                                        tierPricing$index
+                                                            .add(selected1);
+                                                        productPricing['b2c' +
+                                                                group +
+                                                                'Tier'] =
+                                                            tierPricing$index;
                                                       }
-
-                                                    }, icon: index==(tierPricing$index.length)?Icon(Icons.add):
-                                                Icon(Icons.delete))
-                                              ],
-                                            ),
+                                                      setState(() {
+                                                        // addon.add({
+                                                        // 'addOn':admins1[index]['addOn'],
+                                                        //   'addOnArabic':admins1[index]['addOnArabic'],
+                                                        //   'imageUrl':admins1[index]['imageUrl']
+                                                        // });
+                                                        // print(addon.length);
+                                                      });
+                                                    } else {
+                                                      tierPricing$index
+                                                          .removeAt(index);
+                                                      setState(() {});
+                                                    }
+                                                  },
+                                                  icon: index ==
+                                                          (tierPricing$index
+                                                              .length)
+                                                      ? Icon(Icons.add)
+                                                      : Icon(Icons.delete))
+                                            ],
                                           ),
                                         ),
-                                      );
-                                    }),
-                              ),
+                                      ),
+                                    );
+                                  }),
                             ),
-                          ]);
-                    })
-                ),
-
-                // Padding(
-                //   padding: const EdgeInsets.fromLTRB(10,10,10,0),
-                //   child: Container(
-                //       width: 330,
-                //       decoration: BoxDecoration(
-                //         color: Colors.white,
-                //         borderRadius: BorderRadius.circular(8),
-                //         border: Border.all(
-                //           color: Color(0xFFE6E6E6),
-                //         ),
-                //       ),
-                //       child: MultiFilterSelect(
-                //         // allItems: products,
-                //         // initValue: productsList,
-                //         // hintText: 'Select Related Products',
-                //         // selectCallback: (List selectedValue) =>
-                //         // productsList = selectedValue,
-                //
-                //       )
-                //   ),
-                // ),
+                          ),
+                        ]);
+                      })),
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                      vertical: 10.0, horizontal: 0.0),
+                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+                  child: Container(
+                      width: 330,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Color(0xFFE6E6E6),
+                        ),
+                      ),
+                      child: Text('  sdfsd')),
+                ),
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 0.0),
                 ),
                 Align(
                   alignment: Alignment(0.95, 0),
@@ -2684,19 +2468,15 @@ class _AddProductState extends State<AddProduct> {
                     padding: EdgeInsets.fromLTRB(0, 16, 0, 0),
                     child: FFButtonWidget(
                       onPressed: () async {
-
                         final name = textController1.text;
-
-
-
                         final userId = 'currentUserUid';
                         if (name == "" || name == null) {
-                          showUploadMessage(context,
-                              "Please enter product name");
+                          showUploadMessage(
+                              context, "Please enter product name");
                         } else if (uploadedFileUrl1 == "" ||
                             uploadedFileUrl1 == null) {
-                          showUploadMessage(context,
-                              "Please choose a product image");
+                          showUploadMessage(
+                              context, "Please choose a product image");
                         }
                         // else if (videoUrl == "" ||
                         //     videoUrl == null) {
@@ -2704,65 +2484,69 @@ class _AddProductState extends State<AddProduct> {
                         //       "Please choose a product Video");
                         // }
                         else {
-                          bool proceed = await alert(context,
-                              'You want to upload this product?');
+                          bool proceed = await alert(
+                              context, 'You want to upload this product?');
 
                           if (proceed) {
-                            Map<String,dynamic> productMap={
-                              'date':FieldValue.serverTimestamp(),
-                              'madeFrom':madefrom.text,
-                              'gst':int.tryParse(gst.text),
+                            Map<String, dynamic> productMap = {
+                              'date': FieldValue.serverTimestamp(),
+                              'madeFrom': madefrom.text,
+                              'gst': int.tryParse(gst.text),
                               'name': name,
-                              'productCode':productCode.text,
-                              'description':productDescription.text,
-                              'b2c':b2c,
-                              'b2b':b2b,
-                              'imported':imported,
-                              // 'organic':organic,
-                              'payOnDelivery':payOnDelivery,
-                              'intructions':instructions.text,
-                              'relatedProducts':productsList,
-                              'veg': radioButtonitem=='Veg'?true:false,
+                              'productCode': productCode.text,
+                              'description': productDescription.text,
+                              'b2c': b2c,
+                              'b2b': b2b,
+                              'imported': imported,
+                              'sales': sales,
+                              'payOnDelivery': payOnDelivery,
+                              'intructions': instructions.text,
+                              'relatedProducts': productsList,
+                              'veg': radioButtonitem == 'Veg' ? true : false,
                               'ingredients': productIngredients.text,
-                              'fact':fact.text,
-                              'weight':double.tryParse(weight.text)??0 ,
-                              'b2cP': double.tryParse(b2cP.text)??0,
-                              'b2cD': double.tryParse(b2cD.text)??0,
-                              'b2bP':double.tryParse(b2bP.text)??0,
-                              'b2bD':double.tryParse(b2bd.text)??0,
+                              'fact': fact.text,
+                              'weight': double.tryParse(weight.text) ?? 0,
+                              'b2cP': double.tryParse(b2cP.text) ?? 0,
+                              'b2cD': double.tryParse(b2cD.text) ?? 0,
+                              'b2bP': double.tryParse(b2bP.text) ?? 0,
+                              'b2bD': double.tryParse(b2bd.text) ?? 0,
                               'userId': userId,
-                              'category':category[selectedCategory],
-                              'categoryName': selectedCategory,
-                              'brand':brand[selectedBrand],
+                              'category': category[categoryController.text],
+                              'categoryName': categoryController.text,
+                              'brand': brand[brandController.text],
                               'search': setSearchParam(name),
-                              'b2cTier':b2cTierPrice,
-                              'b2bTier':b2bTierPrice,
-                              'open':false,
-                              'available':false,
+                              'b2cTier': b2cTierPrice,
+                              'b2bTier': b2bTierPrice,
+                              'open': false,
+                              'available': false,
                               'branchId': 'currentBranchId',
-                              'start': double.tryParse(startController.text)??0,
-                              'step': double.tryParse(stepController.text)??0,
-                              'stop': double.tryParse(stopController.text)??0,
-                              'stock':int.tryParse(stock.text)??0,
-                              'sold':int.tryParse(sold.text)??0,
-                              'hsnCode':int.tryParse(hsnCode.text),
-                              'ones':0,
-                              'twos':0,
-                              'threes':0,
-                              'fours':0,
-                              'fives':0,
-                              'totalReviews':0,
+                              'start':
+                                  double.tryParse(startController.text) ?? 0,
+                              'step': double.tryParse(stepController.text) ?? 0,
+                              'stop': double.tryParse(stopController.text) ?? 0,
+                              'stock': int.tryParse(stock.text) ?? 0,
+                              'sold': int.tryParse(sold.text) ?? 0,
+                              'hsnCode': int.tryParse(hsnCode.text),
+                              'ones': 0,
+                              'twos': 0,
+                              'threes': 0,
+                              'fours': 0,
+                              'fives': 0,
+                              'totalReviews': 0,
                               'imageId': FieldValue.arrayUnion(
-                                  [uploadedFileUrl1]??[]),
-                              'videoUrl': FieldValue.arrayUnion(
-                                  [videoUrl]??[]),
+                                  [uploadedFileUrl1] ?? []),
+                              'videoUrl':
+                                  FieldValue.arrayUnion([videoUrl] ?? []),
                             };
-                            for(String key in productPricing.keys){
-                              productMap[key]=productPricing[key];
+                            for (String key in productPricing.keys) {
+                              productMap[key] = productPricing[key];
                             }
-                            FirebaseFirestore.instance.collection('products').add(productMap).then((value) {
+                            FirebaseFirestore.instance
+                                .collection('products')
+                                .add(productMap)
+                                .then((value) {
                               value.update({
-                                'productId':value.id,
+                                'productId': value.id,
                               });
                             });
                             Navigator.pop(context);
@@ -2775,8 +2559,7 @@ class _AddProductState extends State<AddProduct> {
                         width: 180,
                         height: 60,
                         color: primaryColor,
-                        textStyle:
-                      TextStyle(
+                        textStyle: TextStyle(
                           fontFamily: 'Montserrat',
                           color: Colors.white,
                           fontSize: 18,
@@ -2799,8 +2582,8 @@ class _AddProductState extends State<AddProduct> {
       ),
     );
   }
-
 }
+
 class MultipleSelectItem<V, D, C> {
   V value;
   D display;
@@ -2815,27 +2598,27 @@ class MultipleSelectItem<V, D, C> {
   });
 
   MultipleSelectItem.fromJson(
-      Map<String, dynamic> json, {
-        displayKey = 'display',
-        valueKey = 'value',
-        contentKey = 'content',
-      })  : value = json[valueKey] ?? '',
+    Map<String, dynamic> json, {
+    displayKey = 'display',
+    valueKey = 'value',
+    contentKey = 'content',
+  })  : value = json[valueKey] ?? '',
         display = json[displayKey] ?? '',
         content = json[contentKey] ?? '';
 
   static List<MultipleSelectItem> allFromJson(
-      List jsonList, {
-        displayKey = 'display',
-        valueKey = 'value',
-        contentKey = 'content',
-      }) {
+    List jsonList, {
+    displayKey = 'display',
+    valueKey = 'value',
+    contentKey = 'content',
+  }) {
     return jsonList
         .map((json) => MultipleSelectItem.fromJson(
-      json,
-      displayKey: displayKey,
-      valueKey: valueKey,
-      contentKey: contentKey,
-    ))
+              json,
+              displayKey: displayKey,
+              valueKey: valueKey,
+              contentKey: contentKey,
+            ))
         .toList();
   }
 }
@@ -2856,27 +2639,27 @@ class Item<V, D, C> {
   });
 
   Item.fromJson(
-      Map<String, dynamic> json, {
-        displayKey = 'display',
-        valueKey = 'value',
-        contentKey = 'content',
-      })  : value = json[valueKey] ?? '',
+    Map<String, dynamic> json, {
+    displayKey = 'display',
+    valueKey = 'value',
+    contentKey = 'content',
+  })  : value = json[valueKey] ?? '',
         display = json[displayKey] ?? '',
         content = json[contentKey] ?? '';
 
   static List<Item> allFromJson(
-      List jsonList, {
-        displayKey = 'display',
-        valueKey = 'value',
-        contentKey = 'content',
-      }) {
+    List jsonList, {
+    displayKey = 'display',
+    valueKey = 'value',
+    contentKey = 'content',
+  }) {
     return jsonList
         .map((json) => Item.fromJson(
-      json,
-      displayKey: displayKey,
-      valueKey: valueKey,
-      contentKey: contentKey,
-    ))
+              json,
+              displayKey: displayKey,
+              valueKey: valueKey,
+              contentKey: contentKey,
+            ))
         .toList();
   }
 }

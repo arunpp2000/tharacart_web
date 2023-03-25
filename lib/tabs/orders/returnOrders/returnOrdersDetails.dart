@@ -2,8 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:tharacart_web/widgets/button.dart';
-import '../dashboard/dashboard.dart';
-import 'b2c/editpop.dart';
+import '../../dashboard/dashboard.dart';
+import '../b2c/editpop.dart';
 import 'package:intl/intl.dart';
 
 class ReturnOrderDetails extends StatefulWidget {
@@ -257,7 +257,7 @@ class _ReturnOrderDetailsState extends State<ReturnOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['shippingMethod'],
+                                            data[0]['shippingMethod']??'',
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -266,7 +266,7 @@ class _ReturnOrderDetailsState extends State<ReturnOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['shipRocketOrderId'],
+                                            data[0]['shipRocketOrderId']??'',
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -275,7 +275,7 @@ class _ReturnOrderDetailsState extends State<ReturnOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['referralCode'],
+                                            data[0]['referralCode']??"",
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -284,7 +284,7 @@ class _ReturnOrderDetailsState extends State<ReturnOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['promoCode'].toString(),
+                                            data[0]['promoCode']??"".toString(),
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -321,7 +321,7 @@ class _ReturnOrderDetailsState extends State<ReturnOrderDetails> {
                                             ),
                                           )),
                                           DataCell(SelectableText(
-                                            data[0]['shippingMethod'],
+                                            data[0]['shippingMethod']??'',
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -796,232 +796,254 @@ class _ReturnOrderDetailsState extends State<ReturnOrderDetails> {
                     SizedBox(
                       height: 0.5,
                     ),
-                    Material(
-                      color: Colors.transparent,
-                      elevation: 10,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(20),
-                              bottomRight: Radius.circular(20)),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 80),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            'Product Total (${items.length}) items',
-                                            style: TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                          SizedBox(
-                                            width: 50,
-                                          ),
-                                          Text('\₹'+sum.toString() ,style: TextStyle(
-                                              fontSize:15,
-                                              fontWeight: FontWeight.bold),),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              // Padding(
-                              //   padding: EdgeInsets.all(8.0),
-                              //   child: Row(
-                              //     mainAxisAlignment: MainAxisAlignment.end,
-                              //     children: [
-                              //       Padding(
-                              //         padding: const EdgeInsets.only(right: 80),
-                              //         child: Row(
-                              //           children: [
-                              //             Text(
-                              //               'Shipping Charge',
-                              //               style: TextStyle(
-                              //                   fontSize: 15,
-                              //                   fontWeight: FontWeight.bold),
-                              //             ),
-                              //             SizedBox(
-                              //               width: 50,
-                              //             ),
-                              //             Text('3242'),
-                              //           ],
-                              //         ),
-                              //       ),
-                              //     ],
-                              //   ),
-                              // ),
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 80),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            '----------------------------------------------------------',
-                                            style: TextStyle(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 80),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            'Order Total',
-                                            style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold),
-
-                                          ),
-                                          SizedBox(
-                                            width: 30,
-                                          ),
-                                          Text('\₹'+sum.toString() ,style: TextStyle(
-                                              fontSize:15,
-                                              fontWeight: FontWeight.bold),),
-                                        ],
-                                      ),
-                                    )
-                                  ],
-                                ),
-                              ),
-                              data[0]['cancellationStatus']==0?
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  FFButtonWidget(
-                                    onPressed: () async {
-                                      // bool pressed=await alert(context, 'Do you want to Approve?');
-                                      // if(pressed){
-                                      //
-                                      //   DocumentReference ref =order.get('orderId');
-                                      //   DocumentSnapshot od =await ref.get();
-                                      //   Map<String,dynamic> odData =od.data();
-                                      //
-                                      //
-                                      //
-                                      //   if(order['orderStatus']>2){
-                                      //
-                                      //     order.reference.update({
-                                      //       'cancellationStatus':1,
-                                      //     });
-                                      //
-                                      //     ref.update(
-                                      //         {
-                                      //           'returnOrder':true,
-                                      //           'orderStatus':2,
-                                      //           'cancelledDate':DateTime.now(),
-                                      //         }
-                                      //     );
-                                      //
-                                      //   }else{
-                                      //     order.reference.update({
-                                      //       'cancellationStatus':1,
-                                      //     });
-                                      //     ref.update(
-                                      //         {
-                                      //           'returnOrder':false,
-                                      //           'orderStatus':2,
-                                      //           'cancelledDate':DateTime.now(),
-                                      //         }
-                                      //     );
-                                      //   }
-                                      //
-                                      //
-                                      //   showUploadMessage(context, 'Request Accepted...');
-                                      //   Navigator.pop(context);
-                                      // }
-
-                                    },
-                                    text: 'Approve',
-                                    options: FFButtonOptions(
-                                      width: 150,
-                                      height: 50,
-                                      color: Color(0xFF2DAA41),
-                                      textStyle: TextStyle(
-                                        fontFamily: 'Lexend Deca',
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      elevation: 2,
-                                      borderSide: BorderSide(
-                                        color: Colors.transparent,
-                                        width: 1,
-                                      ),
-                                      borderRadius: 8,
-                                    ),
-                                  ),
-                                  FFButtonWidget(
-                                    onPressed: () async {
-                                      // bool pressed=await alert(context, 'Do you want to Reject?');
-                                      // if(pressed){
-                                      //   order.reference.update({
-                                      //     'cancellationStatus':2,
-                                      //
-                                      //   });
-                                      //   Navigator.pop(context);
-                                      //
-                                      //   showUploadMessage(context, 'Request Rejected...');
-                                      // }
-                                      },
-                                    text: 'Reject',
-                                    options: FFButtonOptions(
-                                      width: 150,
-                                      height: 50,
-                                      color: Colors.white,
-                                      textStyle: TextStyle(
-                                        fontFamily: 'Lexend Deca',
-                                        color: Color(0xFFD91A1A),
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      elevation: 2,
-                                      borderSide: BorderSide(
-                                        color: Colors.white,
-                                        width: 1,
-                                      ),
-                                      borderRadius: 8,
-                                    ),
-                                  ),
-                                ],
-                              ):Container()
-                            ],
+          Material(
+            color: Colors.transparent,
+            elevation: 10,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(20),
+                    bottomRight: Radius.circular(20)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 10, 0, 10),
+                child: Column(
+                  children: [
+                    // Padding(
+                    //   padding: EdgeInsets.all(8.0),
+                    //   child: Row(
+                    //     mainAxisAlignment: MainAxisAlignment.end,
+                    //     children: [
+                    //       Padding(
+                    //         padding: const EdgeInsets.only(right: 80),
+                    //         child: Row(
+                    //           children: [
+                    //             Text(
+                    //               'Product Total (${items.length}) items',
+                    //               style: TextStyle(
+                    //                   fontSize: 15,
+                    //                   fontWeight: FontWeight.bold),
+                    //             ),
+                    //             SizedBox(
+                    //               width: 50,
+                    //             ),
+                    //             Text(
+                    //               '\₹$sum',
+                    //               style: TextStyle(
+                    //                   fontSize: 15,
+                    //                   fontWeight: FontWeight.bold),
+                    //             ),
+                    //           ],
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    // Padding(
+                    //   padding: EdgeInsets.all(8.0),
+                    //   child: Row(
+                    //     mainAxisAlignment: MainAxisAlignment.end,
+                    //     children: [
+                    //       Padding(
+                    //         padding: const EdgeInsets.only(right: 80),
+                    //         child: Row(
+                    //           children: [
+                    //             Text(
+                    //               'Shipping Charge',
+                    //               style: TextStyle(
+                    //                   fontSize: 15,
+                    //                   fontWeight: FontWeight.bold),
+                    //             ),
+                    //             SizedBox(
+                    //               width: 50,
+                    //             ),
+                    //             Text('3242'),
+                    //           ],
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 80),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Discount',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
                           ),
-                        ),
+                          SizedBox(
+                            width: 50,
+                          ),
+                          Text(
+                            '\₹${data[0]['discount']}',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 80),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Delivery charge',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(
+                            width: 50,
+                          ),
+                          Text(
+                            '\₹${data[0]['deliveryCharge']}',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.only(right: 80),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'Total (excel.GST)',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(
+                            width: 50,
+                          ),
+                          Text(
+                            '\₹${data[0]['total'].toStringAsFixed(2)}',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 80),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'GST:',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(
+                            width: 50,
+                          ),
+                          Text(
+                            '\₹${data[0]['gst'].toStringAsFixed(2)}',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    data[0]['shippingMethod'] == 'Cash On Delivery'
+                        ? Padding(
+                      padding: const EdgeInsets.only(right: 80),
+                      child: Row(
+                        mainAxisAlignment:
+                        MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            'COD Charge:',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(
+                            width: 50,
+                          ),
+                          Text(
+                            '\₹ 33.00',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    )
+                        : SizedBox(),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 80),
+                            child: Row(
+                              children: [
+                                Text(
+                                  '----------------------------------------------------------',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 80),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Order Total',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                SizedBox(
+                                  width: 30,
+                                ),
+                                Text(
+                                  '\₹$sum',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
                   ],
                 ),
               ),

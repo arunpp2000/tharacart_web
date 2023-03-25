@@ -2,17 +2,27 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:tharacart_web/sidemenu.dart';
+import 'package:tharacart_web/tabs/AdminUsers/adminUsersList.dart';
+import 'package:tharacart_web/tabs/banner/b2bBanner.dart';
+import 'package:tharacart_web/tabs/banner/b2cBanner.dart';
 import 'package:tharacart_web/tabs/dashboard/dashboard.dart';
 import 'package:tharacart_web/tabs/manage/manage.dart';
 import 'package:tharacart_web/tabs/orders/b2b/b2bOrders.dart';
 import 'package:tharacart_web/tabs/orders/b2c/b2cOrders.dart';
-import 'package:tharacart_web/tabs/orders/failedOrders.dart';
+import 'package:tharacart_web/tabs/orders/failedOrders/failedOrders.dart';
 import 'package:tharacart_web/tabs/orders/orders.dart';
-import 'package:tharacart_web/tabs/orders/returnOrders.dart';
-import 'package:tharacart_web/tabs/products/addBrands.dart';
-import 'package:tharacart_web/tabs/products/addProducts.dart';
-import 'package:tharacart_web/tabs/products/category.dart';
-import 'package:tharacart_web/tabs/products/productList.dart';
+
+import 'package:tharacart_web/tabs/orders/quotation/quotationList.dart';
+import 'package:tharacart_web/tabs/orders/returnOrders/returnOrders.dart';
+import 'package:tharacart_web/tabs/products/addBrand/addBrands.dart';
+import 'package:tharacart_web/tabs/products/addBrand/brandList.dart';
+import 'package:tharacart_web/tabs/products/addCategory/categoryList.dart';
+import 'package:tharacart_web/tabs/products/addProducts/addProducts.dart';
+import 'package:tharacart_web/tabs/products/addCategory/category.dart';
+import 'package:tharacart_web/tabs/products/addProducts/productList.dart';
+import 'package:tharacart_web/tabs/users/deletedUsers/deletedUsers.dart';
+import 'package:tharacart_web/tabs/users/users/Users.dart';
+
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -27,7 +37,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _tabController = TabController(vsync: this, length: 10, initialIndex: 0);
+    _tabController = TabController(vsync: this, length: 18, initialIndex: 0);
   }
 
   @override
@@ -51,11 +61,20 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       B2COrders(),//2
                       B2BOrders(),//3
                       ReturnOrders(),//4
-                      FailedOrders(),//5
+                      FailedOrders(), //5
+                      QuotationList(),//6
                       AddProduct(),//6
                       ProductList(),//7
                       AddCategory(),//8
-                      AddBrand()//9
+                      CatoryList(),//9
+                      AddBrand(),//10
+                      BrandList(),//11
+                      AddB2bBanner(),//12
+                      B2cBanner(),//13
+                      AdminUsers(),//15
+                      Users(),//16
+                      DeletedUsers(),//17
+
                     ]),
               )
             ],

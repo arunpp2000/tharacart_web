@@ -26,7 +26,7 @@ class _UserProfileState extends State<UserProfile> {
             //   ),
             // ),
             // Text(
-            //   "Flit ERP",
+            //   " ",
             //   style: TextStyle(
             //     color: Colors.white,
             //     fontSize: 18,
@@ -44,7 +44,7 @@ class _UserProfileState extends State<UserProfile> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "V 0.0.0",
+                "V 0.0.1",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 10,
