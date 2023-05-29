@@ -175,7 +175,6 @@ class _BrandListState extends State<BrandList> {
                                     } else {
                                       userStream = FirebaseFirestore.instance
                                           .collection('brands')
-                                          .limit(limit)
                                           .where('search',
                                           arrayContains: text.toUpperCase())
                                           .snapshots();

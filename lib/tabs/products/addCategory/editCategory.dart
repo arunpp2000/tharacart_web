@@ -725,7 +725,7 @@ late TextEditingController description;
                                   showUploadMessage(
                                       context, "Category Deleted...");
 
-                                  Navigator.pop(context);
+                                  // Navigator.pop(context);
 
 
 

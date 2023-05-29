@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../widgets/button.dart';
+import '../../dashboard/dashboard.dart';
+import '../b2c/detailsPage.dart';
 
 class B2BOrders extends StatefulWidget {
   const B2BOrders({Key? key}) : super(key: key);
@@ -492,171 +494,194 @@ class _B2BOrdersState extends State<B2BOrders> {
                             'https://assets9.lottiefiles.com/packages/lf20_HpFqiS.json',
                             height: 500,
                           )
-                        : SizedBox(
-                            width:
-                                // double.infinity,
-                                MediaQuery.of(context).size.width * 0.85,
-                            child: DataTable(
-                              horizontalMargin: 10,
-                              columnSpacing: 20,
-                              columns: [
-                                DataColumn(
-                                  label: Text(
-                                    "S.No",
+                        :  SizedBox(
+                      width:
+                      // double.infinity,
+                      MediaQuery.of(context).size.width * 0.85,
+                      child: DataTable(
+                        horizontalMargin: 10,
+                        columnSpacing: 20,
+                        columns: [
+                          DataColumn(
+                            label: Text(
+                              "S.No",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11),
+                            ),
+                          ),
+                          DataColumn(
+                            label: Text("Date",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11)),
+                          ),
+                          DataColumn(
+                            label: Text(
+                              "Name",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11),
+                            ),
+                          ),
+                          selectedIndex!>2?DataColumn(
+                            label: Text(
+                              "Invoice Number",
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11),
+                            ),
+                          ):DataColumn(label: SizedBox()),
+                          DataColumn(
+                            label: Text("Shipping Method",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11)),
+                          ),
+                          DataColumn(
+                            label: Text("Amount",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11)),
+                          ),
+                          DataColumn(
+                            label: Text("Action",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11)),
+                          ),
+                        ],
+                        rows: List.generate(
+                          data!.length,
+                              (index) {
+                            String name = data![index]
+                            ['shippingAddress']['name'];
+                            String shippingMethod =
+                            data![index]['shippingMethod'];
+                            String price = data![index]['price'].toString();
+                            Timestamp placedDate =
+                            data![index]['placedDate'];
+                            return DataRow(
+                              color: index.isOdd
+                                  ? MaterialStateProperty.all(Colors
+                                  .blueGrey.shade50
+                                  .withOpacity(0.7))
+                                  : MaterialStateProperty.all(
+                                  Colors.blueGrey.shade50),
+                              cells: [
+                                DataCell(Container(
+                                  width: MediaQuery.of(context)
+                                      .size
+                                      .width *
+                                      0.02,
+                                  child: SelectableText(
+                                    (ind == 0
+                                        ? index + 1
+                                        : ind + index + 1)
+                                        .toString(),
                                     style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 11),
+                                      fontFamily: 'Lexend Deca',
+                                      color: Colors.black,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                                DataColumn(
-                                  label: Text(
-                                    "Name",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 11),
+                                )),
+                                DataCell(SelectableText(
+                                  DateFormat("dd-MM-yyyy")
+                                      .format(placedDate.toDate()),
+                                  style: TextStyle(
+                                    fontFamily: 'Lexend Deca',
+                                    color: Colors.black,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ),
-                                DataColumn(
-                                  label: Text("Invoice Number",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11)),
-                                ),
-                                DataColumn(
-                                  label: Text("Accepted Date",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11)),
-                                ),
-                                DataColumn(
-                                  label: Text("Placed Date",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11)),
-                                ),
-                                DataColumn(
-                                  label: Text('Shipping Method',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11)),
-                                ),
-                                DataColumn(
-                                  label: Text("shipRocketOrderId",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11)),
-                                ),
-                                DataColumn(
-                                  label: Text("Price",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11)),
+                                )),
+                                DataCell(SelectableText(
+                                  name,
+                                  style: TextStyle(
+                                    fontFamily: 'Lexend Deca',
+                                    color: Colors.black,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )),
+                                selectedIndex!>2?DataCell(SelectableText(
+                                  'TCE-'+ data![index]['invoiceNo'].toString(),
+                                  style: TextStyle(
+                                    fontFamily: 'Lexend Deca',
+                                    color: Colors.black,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )):DataCell(SizedBox()),
+                                DataCell(SelectableText(
+                                  shippingMethod,
+                                  style: TextStyle(
+                                    fontFamily: 'Lexend Deca',
+                                    color: Colors.black,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )),
+                                DataCell(SelectableText(
+                                  price,
+                                  style: TextStyle(
+                                    fontFamily: 'Lexend Deca',
+                                    color: Colors.black,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )),
+                                DataCell(
+                                  Padding(
+                                    padding: EdgeInsets.all(8.0),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: InkWell(
+                                        onTap: () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      B2cOrderDetails(
+                                                        id: data![
+                                                        index]
+                                                            .id,
+                                                      )));
+                                          print(data![index].id);
+                                        },
+                                        child: Container(
+                                            height: 30,
+                                            width: 70,
+                                            decoration: BoxDecoration(
+                                                color: primaryColor,
+                                                borderRadius:
+                                                BorderRadius
+                                                    .circular(12),
+                                                border: Border.all(
+                                                    color: Colors
+                                                        .black
+                                                        .withOpacity(
+                                                        0.3))),
+                                            alignment:
+                                            Alignment.center,
+                                            child: Text(
+                                              'Action',
+                                              style: TextStyle(
+                                                  color:
+                                                  Colors.white),
+                                            )),
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
-                              rows: List.generate(
-                                data.length,
-                                (index) {
-                                  String name = data[index]['shippingAddress']['name'];
-                                  // String mobile = data[index]['mobNo'];
-
-                                  String invoiceno = '';
-                                  String shippingMethod = data[index]['shippingMethod'];
-                                  String price = data[index]['price'].toString();
-                                  Timestamp deliveredDated = data[index]['deliveredDated'];
-                                  Timestamp placedDate = data[index]['placedDate'];
-
-                                  return DataRow(
-                                    color: index.isOdd
-                                        ? MaterialStateProperty.all(Colors
-                                            .blueGrey.shade50
-                                            .withOpacity(0.7))
-                                        : MaterialStateProperty.all(
-                                            Colors.blueGrey.shade50),
-                                    cells: [
-                                      DataCell(Container(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.02,
-                                        child: SelectableText(
-                                          (ind == 0
-                                                  ? index + 1
-                                                  : ind + index + 1)
-                                              .toString(),
-                                          style: TextStyle(
-                                            fontFamily: 'Lexend Deca',
-                                            color: Colors.black,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      )),
-                                      DataCell(SelectableText(
-                                        '$name',
-                                        style: TextStyle(
-                                          fontFamily: 'Lexend Deca',
-                                          color: Colors.black,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )),
-                                      DataCell(Container(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.1,
-                                        child: SelectableText(
-                                          invoiceno,
-                                          style: TextStyle(
-                                            fontFamily: 'Lexend Deca',
-                                            color: Colors.black,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      )),
-                                      DataCell(SelectableText(
-                                        price,
-                                        style: TextStyle(
-                                          fontFamily: 'Lexend Deca',
-                                          color: Colors.black,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )),
-                                      DataCell(SelectableText(
-                                        shippingMethod,
-                                        style: TextStyle(
-                                          fontFamily: 'Lexend Deca',
-                                          color: Colors.black,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )),
-                                      DataCell(SelectableText(
-                                        DateFormat("dd-MM-yyyy")
-                                            .format(placedDate.toDate()),
-                                        style: TextStyle(
-                                          fontFamily: 'Lexend Deca',
-                                          color: Colors.black,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )),
-                                      DataCell(SelectableText(
-                                        DateFormat("dd-MM-yyyy")
-                                            .format(deliveredDated.toDate()),
-                                        style: TextStyle(
-                                          fontFamily: 'Lexend Deca',
-                                          color: Colors.black,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      )),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
-                          );
+                            );
+                          },
+                        ),
+                      ),
+                    );
                   }),
               Padding(
                 padding: const EdgeInsets.only(top: 10),

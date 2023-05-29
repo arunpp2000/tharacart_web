@@ -1,12 +1,18 @@
 
+import 'dart:html';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 import '../../../widgets/button.dart';
 import '../../../widgets/storage.dart';
 import '../../../widgets/uploadmedia.dart';
 import '../../dashboard/dashboard.dart';
+import '../addCategory/editCategory.dart';
 
 
 class AddBrand extends StatefulWidget {
@@ -42,7 +48,42 @@ class _AddBrandState extends State<AddBrand> {
     youTubeLink = TextEditingController();
     color = TextEditingController();
   }
+  var pickedFile;
+  final ImagePicker _picker = ImagePicker();
+  late File file;
+  var bytes;
+  Future imgFromGallerybrand() async {
+    print('----------------------HERkkkE?-------------------------');
+    pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    var fileName = DateTime.now();
+    var ref = await FirebaseStorage.instance.ref().child('proofs/$fileName');
+    Uri blobUri = Uri.parse(pickedFile.path);
+    http.Response response = await http.get(blobUri);
+    await ref
+        .putData(response.bodyBytes, SettableMetadata(contentType: 'image/png'))
+        .then((p0) async {
+      imageUrl = (await ref.getDownloadURL()).toString();
+      print(imageUrl);
+      setState(() {});
+    });
 
+  }
+  Future imgFromGallerybanner() async {
+    print('----------------------HERkkkE?-------------------------');
+    pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    var fileName = DateTime.now();
+    var ref = await FirebaseStorage.instance.ref().child('proofs/$fileName');
+    Uri blobUri = Uri.parse(pickedFile.path);
+    http.Response response = await http.get(blobUri);
+    await ref
+        .putData(response.bodyBytes, SettableMetadata(contentType: 'image/png'))
+        .then((p0) async {
+      banner = (await ref.getDownloadURL()).toString();
+      print(banner);
+      setState(() {});
+    });
+
+  }
   setSearchParam(String caseNumber) {
     List<String> caseSearchList =[];
     String temp = "";
@@ -103,30 +144,7 @@ class _AddBrandState extends State<AddBrand> {
                     children: [
                       FFButtonWidget(
                         onPressed: () async {
-                          final selectedMedia = await selectMedia(
-                            maxWidth: 1080.00,
-                            maxHeight: 1320.00,
-                          );
-                          if (selectedMedia != null &&
-                              validateFileFormat(
-                                  selectedMedia.storagePath,
-                                  context)) {
-                            showUploadMessage(
-                                context, 'Uploading file...',
-                                showLoading: true);
-                            final downloadUrl = await uploadData(
-                                selectedMedia.storagePath,
-                                selectedMedia.bytes);
-                            ScaffoldMessenger.of(context)
-                                .hideCurrentSnackBar();
-                            if (downloadUrl != null) {
-                              setState(() => imageUrl = downloadUrl);
-                              showUploadMessage(context, 'Success!');
-                            } else {
-                              showUploadMessage(
-                                  context, 'Failed to upload media');
-                            }
-                          }
+                          imgFromGallerybrand();
                         },
                         text: imageUrl == ''
                             ? 'Upload Image'
@@ -150,31 +168,7 @@ class _AddBrandState extends State<AddBrand> {
                       ),
                       FFButtonWidget(
                         onPressed: () async {
-                          final selectedMedia = await selectMedia(
-                            maxWidth: 1080.00,
-                            maxHeight: 1320.00,
-                          );
-                          if (selectedMedia != null &&
-                              validateFileFormat(
-                                  selectedMedia.storagePath,
-                                  context)) {
-                            showUploadMessage(
-                                context, 'Uploading file...',
-                                showLoading: true);
-                            final downloadUrl = await uploadData(
-                                selectedMedia.storagePath,
-                                selectedMedia.bytes);
-                            ScaffoldMessenger.of(context)
-                                .hideCurrentSnackBar();
-                            if (downloadUrl != null) {
-                              setState(() => banner = downloadUrl);
-                              showUploadMessage(
-                                  context, 'Media upload Success!');
-                            } else {
-                              showUploadMessage(
-                                  context, 'Failed to upload media');
-                            }
-                          }
+                          imgFromGallerybanner();
                         },
                         text: banner == ''
                             ? 'Upload Banner'
@@ -919,7 +913,7 @@ class _AddBrandState extends State<AddBrand> {
                               'brand':name?.text,
                               'delete':false,
                               'head':head.text,
-                               'branchId':'currentBranchId',
+                               'branchId':currentBranchId,
                               'imageUrl':imageUrl,
                               'banner':banner,
                               'color':color?.text,
@@ -933,7 +927,7 @@ class _AddBrandState extends State<AddBrand> {
                               });
                             });
 
-                            Navigator.pop(context);
+
 
                             showUploadMessage(context, 'Success!');
                           }

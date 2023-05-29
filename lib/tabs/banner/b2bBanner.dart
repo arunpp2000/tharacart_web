@@ -1,9 +1,14 @@
+import 'dart:html';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../widgets/button.dart';
 import '../../widgets/storage.dart';
@@ -127,7 +132,26 @@ class _AddB2bBannerState extends State<AddB2bBanner> {
   Map<String, dynamic> productDetails = {};
   Map<String, dynamic> brandDetails = {};
   final scaffoldKey = GlobalKey<ScaffoldState>();
+  Future imgFromGalleryb() async {
+    print('----------------------HERkkkE?-------------------------');
+    pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    var fileName = DateTime.now();
+    var ref = await FirebaseStorage.instance.ref().child('proofs/$fileName');
+    Uri blobUri = Uri.parse(pickedFile.path);
+    http.Response response = await http.get(blobUri);
+    await ref
+        .putData(response.bodyBytes, SettableMetadata(contentType: 'image/png'))
+        .then((p0) async {
+      uploadedFileUrl = (await ref.getDownloadURL()).toString();
+      print(uploadedFileUrl);
+      setState(() {});
+    });
 
+  }
+  var pickedFile;
+  final ImagePicker _picker = ImagePicker();
+  late File file;
+  var bytes;
   @override
   void initState() {
     super.initState();
@@ -314,7 +338,7 @@ class _AddB2bBannerState extends State<AddB2bBanner> {
                           child: CustomDropdown.search(
                             hintText: 'Select brand',
                             hintStyle: TextStyle(color: Colors.black),
-                            items: fetchedBrand,
+                            items: fetchedBrand.isEmpty?['']:fetchedBrand,
                             controller: brandController,
                             excludeSelected: false,
                             onChanged: (text) {
@@ -343,7 +367,7 @@ class _AddB2bBannerState extends State<AddB2bBanner> {
                           child: CustomDropdown.search(
                             hintText: 'Select Product',
                             hintStyle: TextStyle(color: Colors.black),
-                            items: fetchedProducts,
+                            items: fetchedProducts.isEmpty?['']:fetchedProducts,
                             controller: productController,
                             excludeSelected: false,
                             onChanged: (text) {
@@ -372,7 +396,7 @@ class _AddB2bBannerState extends State<AddB2bBanner> {
                           child: CustomDropdown.search(
                             hintText: 'Select category',
                             hintStyle: TextStyle(color: Colors.black),
-                            items: fetchedCategory,
+                            items: fetchedCategory.isEmpty?['']:fetchedCategory,
                             controller: categoryController,
                             excludeSelected: false,
                             onChanged: (text) {
@@ -394,49 +418,35 @@ class _AddB2bBannerState extends State<AddB2bBanner> {
                       color: Color(0xFFEEEEEE),
                     ),
                   ),
-                  FFButtonWidget(
-                    onPressed: () async {
-                      final selectedMedia = await selectMedia(
-                        maxWidth: 1080.00,
-                        maxHeight: 1320.00,
-                      );
-                      if (selectedMedia != null &&
-                          validateFileFormat(
-                              selectedMedia.storagePath, context)) {
-                        showUploadMessage(context, 'Uploading file...',
-                            showLoading: true);
-                        final downloadUrl = await uploadData(
-                            selectedMedia.storagePath, selectedMedia.bytes);
-                        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                        if (downloadUrl != null) {
-                          setState(() => uploadedFileUrl = downloadUrl);
-                          showUploadMessage(context, 'Success!');
-                        } else {
-                          showUploadMessage(context, 'Failed to upload media');
-                        }
-                      }
-                    },
-                    text: uploadedFileUrl == '' ? 'Upload Image' : 'Change',
-                    icon: FaIcon(
-                      FontAwesomeIcons.camera,
-                      size: 20,
-                    ),
-                    options: FFButtonOptions(
+                  SizedBox(
                       width: 200,
                       height: 40,
-                      color: primaryColor,
-                      textStyle: TextStyle(
-                        fontFamily: 'Lexend Deca',
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
-                      borderSide: BorderSide(
-                        color: Colors.transparent,
-                        width: 1,
-                      ),
-                      borderRadius: 12,
-                    ),
-                  )
+                      child: ElevatedButton(onPressed: (){ imgFromGalleryb();}, child: uploadedFileUrl == '' ?Text('Upload Image'):Text('Change'))),
+                  // FFButtonWidget(
+                  //   onPressed: () async {
+                  //     imgFromGalleryb();
+                  //   },
+                  //   text: uploadedFileUrl == '' ? 'Upload Image' : 'Change',
+                  //   icon: FaIcon(
+                  //     FontAwesomeIcons.camera,
+                  //     size: 20,
+                  //   ),
+                  //   options: FFButtonOptions(
+                  //     width: 200,
+                  //     height: 40,
+                  //     color: primaryColor,
+                  //     textStyle: TextStyle(
+                  //       fontFamily: 'Lexend Deca',
+                  //       color: Colors.white,
+                  //       fontSize: 12,
+                  //     ),
+                  //     borderSide: BorderSide(
+                  //       color: Colors.transparent,
+                  //       width: 1,
+                  //     ),
+                  //     borderRadius: 12,
+                  //   ),
+                  // )
                 ],
               ),
             ),
@@ -484,7 +494,7 @@ class _AddB2bBannerState extends State<AddB2bBanner> {
                                   .collection('banner')
                                   .doc(currentBranchId)
                                   .update({'homePageBannerB2b': b2bList});
-                              Navigator.pop(context);
+                              // Navigator.pop(context);
                               showUploadMessage(
                                   context, 'New Banner Uploaded..');
                             } else {
@@ -563,7 +573,7 @@ class _AddB2bBannerState extends State<AddB2bBanner> {
                                 .collection('banner')
                                 .doc(currentBranchId)
                                 .update({'homePageBannerB2b': b2bList});
-                            Navigator.pop(context);
+                            // Navigator.pop(context);
                             showUploadMessage(
                                 context, 'New Banner Uploaded..');
                           } else {

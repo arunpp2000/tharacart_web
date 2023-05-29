@@ -1,13 +1,20 @@
 import 'dart:async';
+import 'dart:html';
+import 'package:http/http.dart' as http;
 
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_multi_select_items/flutter_multi_select_items.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:tharacart_web/widgets/button.dart';
 import '../../../../widgets/uploadmedia.dart';
 import '../../../widgets/storage.dart';
 import '../../dashboard/dashboard.dart';
+import '../mutli.dart';
 import 'b2bDialogueBox.dart';
 import 'b2cDialogueBox.dart';
 
@@ -32,17 +39,17 @@ class _AddProductState extends State<AddProduct> {
   Map<String, dynamic> productPricing = {};
   int? radioButtonValue;
   List<String> _selectedCuisine = [];
-  List<Item> products = [];
+  List<dynamic> products = [];
   List<String> productsList = [];
 
   List<Map<String, dynamic>> newGroupPriceB2c = [];
   List<Map<String, dynamic>> newGroupPriceB2b = [];
-
+List data=[];
   String radioButtonitem = 'Non Veg';
   List<Map<String, dynamic>> b2cTierPrice = [];
   List<Map<String, dynamic>> b2bTierPrice = [];
   List<Map<String, dynamic>> b2bDelhiTierPrice = [];
-
+  final MultiSelectController _controller = MultiSelectController();
   late TextEditingController textController1;
   late TextEditingController soldQty;
   late TextEditingController b2bP;
@@ -66,6 +73,7 @@ class _AddProductState extends State<AddProduct> {
   late TextEditingController searchController;
   late TextEditingController categoryController;
   late TextEditingController brandController;
+  late TextEditingController searchRelated;
   final pageViewController = PageController();
   final scaffoldKey = GlobalKey<ScaffoldState>();
   List<String> fetchedCategories = [];
@@ -100,7 +108,7 @@ class _AddProductState extends State<AddProduct> {
   Map<String, dynamic> categoryDetails = {};
   Map<String, dynamic> subCategory = {};
   Map<String, dynamic> subCategoryDetails = {};
-
+bool isSelected=false;
   @override
   void initState() {
     super.initState();
@@ -116,6 +124,7 @@ class _AddProductState extends State<AddProduct> {
     b2bDelhiD = TextEditingController();
     stock = TextEditingController();
     sold = TextEditingController();
+    searchRelated = TextEditingController();
     hsnCode = TextEditingController();
     fact = TextEditingController();
     weight = TextEditingController();
@@ -196,7 +205,7 @@ class _AddProductState extends State<AddProduct> {
       setState(() {});
     }
   }
-
+Stream? userStream;
   Future getShops() async {
     QuerySnapshot data1 =
         await FirebaseFirestore.instance.collection("shops").get();
@@ -379,9 +388,28 @@ class _AddProductState extends State<AddProduct> {
   //       ));
   //     }
   //   });
-  //
+
   //
   // }
+  var pickedFile;
+  final ImagePicker _picker = ImagePicker();
+  late File file;
+  var bytes;
+  Future imgFromGallery() async {
+    print('----------------------HERkkkE?-------------------------');
+    pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    var fileName = DateTime.now();
+    var ref = await FirebaseStorage.instance.ref().child('proofs/$fileName');
+    Uri blobUri = Uri.parse(pickedFile.path);
+    http.Response response = await http.get(blobUri);
+    await ref
+        .putData(response.bodyBytes, SettableMetadata(contentType: 'image/png'))
+        .then((p0) async {
+      uploadedFileUrl1 = (await ref.getDownloadURL()).toString();
+      setState(() {});
+    });
+
+  }
   @override
   Widget build(BuildContext context) {
     print(selectedShopIndex);
@@ -419,12 +447,17 @@ class _AddProductState extends State<AddProduct> {
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Expanded(
-                        child: Text(
-                          'Add Product',
-                          style: TextStyle(
-                              fontFamily: 'Poppins',
-                              fontSize: 25,
-                              fontWeight: FontWeight.w600),
+                        child: InkWell(
+                          onTap:(){
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=>MultiSelectCheckListScreen()));
+                          },
+                          child: Text(
+                            'Add Product',
+                            style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 25,
+                                fontWeight: FontWeight.w600),
+                          ),
                         ),
                       ),
                     ],
@@ -436,26 +469,8 @@ class _AddProductState extends State<AddProduct> {
                   children: [
                     IconButton(
                       onPressed: () async {
-                        final selectedMedia = await selectMedia(
-                          maxWidth: 1080.00,
-                          maxHeight: 1320.00,
-                        );
-                        if (selectedMedia != null &&
-                            validateFileFormat(
-                                selectedMedia.storagePath, context)) {
-                          showUploadMessage(context, 'Uploading Image...',
-                              showLoading: true);
-                          final downloadUrl = await uploadData(
-                              selectedMedia.storagePath, selectedMedia.bytes);
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          if (downloadUrl != null) {
-                            setState(() => uploadedFileUrl1 = downloadUrl);
-                            showUploadMessage(context, 'Success!');
-                          } else {
-                            showUploadMessage(
-                                context, 'Failed to upload media');
-                          }
-                        }
+
+                        imgFromGallery();
                       },
                       icon: Icon(
                         Icons.camera_alt,
@@ -792,7 +807,7 @@ class _AddProductState extends State<AddProduct> {
                         child: CustomDropdown.search(
                           hintText: 'Select Category',
                           hintStyle: TextStyle(color: Colors.black),
-                          items: fetchedCategories,
+                          items: fetchedCategories.isEmpty?['']:fetchedCategories,
                           controller: categoryController,
                           excludeSelected: false,
                           onChanged: (text) {
@@ -821,7 +836,7 @@ class _AddProductState extends State<AddProduct> {
                         child: CustomDropdown.search(
                           hintText: 'Select brand',
                           hintStyle: TextStyle(color: Colors.black),
-                          items: fetchedBrand,
+                          items: fetchedBrand.isEmpty?['']:fetchedBrand,
                           controller: brandController,
                           excludeSelected: false,
                           onChanged: (text) {
@@ -2446,17 +2461,239 @@ class _AddProductState extends State<AddProduct> {
                         ]);
                       })),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
-                  child: Container(
-                      width: 330,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Color(0xFFE6E6E6),
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    'Related Products',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                Padding(
+                  padding:
+                  const EdgeInsetsDirectional.fromSTEB(4, 4, 0, 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 20),
+                        child: Container(
+                          width: 600,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 3,
+                                color: Color(0x39000000),
+                                offset: Offset(0, 1),
+                              )
+                            ],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding:
+                            const EdgeInsetsDirectional.fromSTEB(4, 4, 0, 4),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                Expanded(
+                                  child: Padding(
+                                    padding:
+                                    EdgeInsetsDirectional.fromSTEB(4, 0, 4, 0),
+                                    child: TextFormField(
+                                      controller: searchRelated,
+                                      obscureText: false,
+                                      onChanged: (value){
+                                        userStream = FirebaseFirestore.instance
+                                            .collection("products")
+                                            .where('search',
+                                            arrayContains: searchRelated.text.toUpperCase()).limit(20)
+                                            .snapshots();
+                                        setState(() {});
+                                    },
+                                      onFieldSubmitted: (value){
+                                        // userStream = FirebaseFirestore.instance
+                                        //     .collection("products")
+                                        //     .where('search',
+                                        //     arrayContains: searchRelated.text.toUpperCase())
+                                        //     .snapshots();
+                                        // setState(() {});
+                                        // print('========');
+                                        // print(value);
+                                      },
+
+                                      decoration: InputDecoration(
+                                        labelText: 'Search ',
+                                        hintText: 'Please Enter Name',
+                                        labelStyle: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          color: Color(0xFF7C8791),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Color(0x00000000),
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderSide: BorderSide(
+                                            color: Color(0x00000000),
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        filled: true,
+                                        fillColor: Colors.white,
+                                      ),
+                                      style: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        color: Color(0xFF090F13),
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.normal,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                  EdgeInsetsDirectional.fromSTEB(0, 0, 8, 0),
+                                  child: FFButtonWidget(
+                                    onPressed: () {
+                                      userStream = FirebaseFirestore.instance
+                                          .collection("products")
+                                          .where('search',
+                                          arrayContains: searchRelated.text.toUpperCase()).limit(20)
+                                          .snapshots();
+                                      setState(() {});
+                                    },
+                                    text: 'Search',
+                                    options: FFButtonOptions(
+                                      width: 70,
+                                      height: 40,
+                                      color: Color(0xFF4B39EF),
+                                      textStyle: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.normal,
+                                      ),
+                                      elevation: 2,
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1,
+                                      ),
+                                      borderRadius: 50,
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding:
+                                  EdgeInsetsDirectional.fromSTEB(0, 0, 8, 0),
+                                  child: FFButtonWidget(
+                                    onPressed: () {
+                                      searchRelated.clear();
+                                      userStream = FirebaseFirestore.instance
+                                          .collection("products")
+                                          .where('search',
+                                          arrayContains: ''.toUpperCase())
+                                          .snapshots();
+                                      setState(() {});
+                                    },
+                                    text: 'Clear',
+                                    options: FFButtonOptions(
+                                      width: 70,
+                                      height: 40,
+                                      color: Color(0xFF4B39EF),
+                                      textStyle: TextStyle(
+                                        fontFamily: 'Poppins',
+                                        color: Colors.green,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.normal,
+                                      ),
+                                      elevation: 2,
+                                      borderSide: BorderSide(
+                                        color: Colors.transparent,
+                                        width: 1,
+                                      ),
+                                      borderRadius: 50,
+                                    ),
+                                  ),
+                                ),
+
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                      child: Text('  sdfsd')),
+
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  child: StreamBuilder(
+                    stream: userStream,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return Center(
+                          child: Text(''),
+                        );
+                      }
+                      data = [];
+                      data = snapshot.data!.docs;
+                      print(data);
+                      print('---pppp--');
+                      return data.length == 0
+                          ? Text('empty')
+                          :        MultiSelectCheckList(
+                        maxSelectableCount: 40,
+                        textStyles: const MultiSelectTextStyles(
+                            selectedTextStyle: TextStyle(
+                                color: Colors.white, fontWeight: FontWeight.bold)),
+                        itemsDecoration: MultiSelectDecorations(
+                            selectedDecoration:
+                            BoxDecoration(color: Colors.indigo.withOpacity(0.8))),
+                        listViewSettings: ListViewSettings(
+
+
+                            separatorBuilder: (context, index) => const Divider(
+                              height: 0,
+                            )),
+                        controller: _controller,
+                        items: List.generate(
+                            data.length,
+                                (index) => CheckListCard(
+                          value:data[index].id,
+                                title: Text(data[index]['name']),
+                                selectedColor: Colors.white,
+                                checkColor: Colors.indigo,
+                                // selected: false,
+                                // enabled:true,
+                                checkBoxBorderSide:
+                                const BorderSide(color: Colors.blue),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5)))),
+                        onChange: (allSelectedItems, selectedItem) {
+
+                          if(products.contains(selectedItem)){
+                            products.remove(selectedItem);
+                            showUploadMessage(context, 'removed');
+                          }else{
+                            products.add(selectedItem);
+                            showUploadMessage(context, 'added');
+                          }
+                          print(selectedItem);
+
+                           print('llllllll');
+                          print(products);
+
+                        },
+                        onMaximumSelected: (allSelectedItems, selectedItem) {
+
+                        },
+                      );
+                    }
+                  ),
                 ),
                 Padding(
                   padding:
@@ -2478,11 +2715,11 @@ class _AddProductState extends State<AddProduct> {
                           showUploadMessage(
                               context, "Please choose a product image");
                         }
-                        // else if (videoUrl == "" ||
-                        //     videoUrl == null) {
-                        //   showUploadMessage(context,
-                        //       "Please choose a product Video");
-                        // }
+                        else if (videoUrl == "" ||
+                            videoUrl == null) {
+                          showUploadMessage(context,
+                              "Please choose a product Video");
+                        }
                         else {
                           bool proceed = await alert(
                               context, 'You want to upload this product?');
@@ -2581,6 +2818,14 @@ class _AddProductState extends State<AddProduct> {
         ),
       ),
     );
+  }
+  getProducts(){
+    FirebaseFirestore.instance.collection("products").where('name').snapshots().listen((event) {
+      for (DocumentSnapshot doc in event.docs) {
+        var name = (doc['name']);
+      }
+      setState(() {});
+    });
   }
 }
 

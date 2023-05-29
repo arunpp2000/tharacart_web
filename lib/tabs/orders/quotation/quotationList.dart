@@ -81,6 +81,7 @@ class _QuotationListState extends State<QuotationList> {
   List datas = [
     'Requests',
     'Accepted',
+    'Rejected',
   ];
 
   Map<int, DocumentSnapshot> lastDocuments = {};
@@ -126,7 +127,7 @@ class _QuotationListState extends State<QuotationList> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Return Orders',
+                        'Quotation List',
                         style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 25,

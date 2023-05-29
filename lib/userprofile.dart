@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 
+import 'login/login.dart';
+
 class UserProfile extends StatefulWidget {
   const UserProfile({Key? key}) : super(key: key);
 
@@ -14,26 +16,24 @@ class _UserProfileState extends State<UserProfile> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: [
-            // Container(
-            //   // color: Colors.green,
-            //   height: MediaQuery.of(context).size.height * 0.1,
-            //   width: 150,
-            //   child: Image.asset(
-            //     "",
-            //     fit: BoxFit.fill,
-            //   ),
-            // ),
-            // Text(
-            //   " ",
-            //   style: TextStyle(
-            //     color: Colors.white,
-            //     fontSize: 18,
-            //     fontWeight: FontWeight.w400,
-            //   ),
-            // ),
-          ],
+        Center(
+          child: SizedBox(
+            // color: Colors.green,
+            height: MediaQuery.of(context).size.height * 0.1,
+            width: 130,
+            child: Image.asset(
+              "assets/images/tara.png",
+              fit: BoxFit.fill,
+            ),
+          ),
+        ),
+        Text(
+          " ",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w400,
+          ),
         ),
         SizedBox(
           height: 5,
@@ -44,7 +44,7 @@ class _UserProfileState extends State<UserProfile> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "V 0.0.1",
+                "V 0.0.6",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 10,
@@ -91,15 +91,17 @@ class _UserProfileState extends State<UserProfile> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'useremail',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
+              Expanded(
+                child: Text(
+                '',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                  ),
                 ),
               ),
               Text(
-                '',
+                uEmail!,
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 11,

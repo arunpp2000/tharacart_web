@@ -1,3 +1,4 @@
+import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -39,10 +40,12 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
 
   Map address = {};
   var data;
+  String partner ='';
   List items = [];
   int? sum;
   TextEditingController awbCode = TextEditingController();
   TextEditingController trackingUrl = TextEditingController();
+  TextEditingController pController = TextEditingController();
   String? shipprocketId;
   String? invoiceNo;
   getorders() {
@@ -54,12 +57,14 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
       data = event.data();
       address = event.data()!['shippingAddress'];
       sum = 0;
+      items=[];
       for (var a in event.data()!['items']) {
         items.add(a);
         sum = a['price'] + sum;
-
       }
       try {
+        partner=data['partner'];
+        pController.text=data['partner'];
         shipprocketId = data['shippRocketId'];
         invoiceNo = data['invoiceNo'].toString();
       } catch (e) {
@@ -79,11 +84,33 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
   // isEqualTo: widget.order.referralCode)
   //     .get();
   // }
+
+  List<dynamic> p=[];
+  List<String> pItems=[''];
+  getPartner(){
+    FirebaseFirestore.instance.collection('settings').doc('order').get().then((value) {
+      p=value.data()!['partners'];
+      for(var a in value.data()!['partners'])
+{
+  pItems.add(a.toString());
+}
+
+      // pItems=value.data()!['partners'];
+      print('---------');
+      print(p);
+      setState(() {
+
+      });
+    });
+
+  }
   @override
   void initState() {
+
     // TODO: implement initState
     super.initState();
     getorders();
+    getPartner();
   }
 
   @override
@@ -314,10 +341,11 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                   ],
                                 ),
                               ),
+
                               data['orderStatus'] >= 1
-                                  ? Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                  ?
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                       children: [
                                         Padding(
                                           padding:
@@ -413,7 +441,7 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                               ),
                                               FFButtonWidget(
                                                 onPressed: () async {
-                                                  // if(awbCode.text!=''){
+                                                  if(awbCode.text!=''){
                                                   bool pressed = await alert(
                                                       context, 'Update AWB');
                                                   if (pressed) {
@@ -423,12 +451,12 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                                         .update({
                                                       'awb_code': awbCode.text,
                                                     });
+                                                    showUploadMessage(context,
+                                                        'AWB updated...');
                                                   }
-                                                  showUploadMessage(context,
-                                                      'AWB updated...');
-                                                  // }else{
-                                                  //   showUploadMessage(context, 'Please Enter AWB Code...');
-                                                  // }
+                                                  }else{
+                                                    errorMsg(context, 'Please Enter AWB Code...');
+                                                  }
                                                 },
                                                 text: 'Update',
                                                 options: FFButtonOptions(
@@ -451,13 +479,75 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                           ),
                                         ),
                                         Padding(
+                                          padding:
+                                          const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 5),
+                                          child: Container(
+                                            width: 330,
+                                            height: 55,
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              boxShadow: [
+                                                const BoxShadow(
+                                                  blurRadius: 2,
+                                                  color: Color(0x4D101213),
+                                                  offset: Offset(0, 2),
+                                                )
+                                              ],
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: CustomDropdown.search(
+                                              hintText: 'Select partner',
+                                              hintStyle: TextStyle(color: Colors.black),
+                                              items: pItems.isEmpty?['']:pItems,
+                                              controller:pController,
+                                              excludeSelected: false,
+                                              onChanged: (text) {
+                                                setState(() {});
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                        // Padding(
+                                        //   padding: const EdgeInsets.all(8.0),
+                                        //   child: Container(
+                                        //     width: 300,
+                                        //     decoration: BoxDecoration(
+                                        //         color: Colors.grey[200],
+                                        //         border: Border.all(
+                                        //           color: Colors.white,
+                                        //         ),
+                                        //         borderRadius: BorderRadius.circular(12)),
+                                        //     child: DropdownButtonFormField<String>(
+                                        //       value: partner,
+                                        //       decoration: InputDecoration(
+                                        //         hintText: "Partners",
+                                        //         border: OutlineInputBorder(),
+                                        //       ),
+                                        //       onChanged: (crs) {
+                                        //         setState(() {
+                                        //           partner = crs.toString();
+                                        //         });
+                                        //       },
+                                        //       validator: (value) =>
+                                        //       value == null ? 'field required' : null,
+                                        //       items: p.toList()
+                                        //           .map<DropdownMenuItem<String>>((value) {
+                                        //         return DropdownMenuItem<String>(
+                                        //           value: value,
+                                        //           child: Text(value),
+                                        //         );
+                                        //       }).toList(),
+                                        //     ),
+                                        //   ),
+                                        // ),
+                                        Padding(
                                           padding: EdgeInsets.fromLTRB(
                                               10, 12, 0, 10),
                                           child: Row(
                                             mainAxisSize: MainAxisSize.max,
                                             children: [
                                               Container(
-                                                width: 500,
+                                                width: 300,
                                                 decoration: BoxDecoration(
                                                   color: Colors.white,
                                                   borderRadius:
@@ -547,7 +637,7 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                                   ),
                                                   FFButtonWidget(
                                                     onPressed: () async {
-                                                      // if(trackingUrl.text!=''){
+                                                      if(trackingUrl.text!=''){
                                                       bool pressed = await alert(
                                                           context,
                                                           'Update Tracking Url');
@@ -560,13 +650,14 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                                             .update({
                                                           'trackingUrl':
                                                               trackingUrl.text,
+                                                          'partner':pController.text,
                                                         });
+                                                        showUploadMessage(context,
+                                                            'Tracking Url updated...');
                                                       }
-                                                      showUploadMessage(context,
-                                                          'Tracking Url updated...');
-                                                      // }else{
-                                                      //   showUploadMessage(context, 'Please Enter Tracking Url...');
-                                                      // }
+                                                      }else{
+                                                        errorMsg(context, 'Please Enter Tracking Url...');
+                                                      }
                                                     },
                                                     text: 'Update',
                                                     options: FFButtonOptions(
@@ -603,9 +694,9 @@ class _B2cOrderDetailsState extends State<B2cOrderDetails> {
                                                               trackingUrl.text);
                                                         }
                                                       } else {
-                                                        showUploadMessage(
+                                                        trackingUrl.text ==''? errorMsg(
                                                             context,
-                                                            'Please Enter Tracking Url...');
+                                                            'Please Enter Tracking Url...'):'';
                                                       }
                                                     },
                                                     text: 'Launch',

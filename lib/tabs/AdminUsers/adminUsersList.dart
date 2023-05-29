@@ -185,8 +185,6 @@ class _AdminUsersState extends State<AdminUsers> {
                                                       isNotEqualTo: true)
                                                   .where('delete',
                                                       isEqualTo: false)
-                                                  .orderBy('verified',
-                                                      descending: true)
                                                   .orderBy('created_time',
                                                       descending: true)
                                                   .snapshots();
@@ -457,10 +455,8 @@ class _AdminUsersState extends State<AdminUsers> {
                                 (index) {
                                   String name = data[index]['display_name'];
                                   String email = data[index]['email'];
-                                  String image =
-                                      data[index]['photo_url'].toString();
-                                  Timestamp placedDate =
-                                      data[index]['created_time'];
+                                  String image = data[index]['photo_url'].toString();
+                                  Timestamp placedDate = data[index]['created_time'];
                                   return DataRow(
                                     color: index.isOdd
                                         ? MaterialStateProperty.all(Colors
@@ -558,7 +554,10 @@ class _AdminUsersState extends State<AdminUsers> {
                                                       context,
                                                       'Do You want to Approve this user  ?');
                                                   if (proceed) {
-                                                    await FirebaseFirestore
+                                                 FirebaseFirestore.instance.collection('admin_users').doc(data[index]['uid']).update({
+                                                   'verified':true,
+                                                 });
+                                                     FirebaseFirestore
                                                         .instance
                                                         .collection('branches')
                                                         .doc(currentBranchId)
@@ -569,6 +568,7 @@ class _AdminUsersState extends State<AdminUsers> {
                                                       ]),
                                                     });
                                                   }
+                                                  showUploadMessage(context, 'Verified');
                                                 },
                                                 child: Icon(Icons.add))
                                             : selectedIndex == 1
@@ -578,6 +578,9 @@ class _AdminUsersState extends State<AdminUsers> {
                                                           context,
                                                           'Do You want to Remove this user  ?');
                                                       if (proceed) {
+                                                        FirebaseFirestore.instance.collection('admin_users').doc(data[index]['uid']).update({
+                                                          'verified':false,
+                                                        });
                                                         await FirebaseFirestore
                                                             .instance
                                                             .collection(

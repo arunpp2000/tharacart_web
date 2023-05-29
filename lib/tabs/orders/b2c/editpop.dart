@@ -487,29 +487,44 @@ class _AddressPopUpState extends State<AddressPopUp> {
           Navigator.pop(context);
         }, child: Text('Cancel')),
         TextButton(onPressed: () async {
-    bool pressed = await alert(
-    context,
+    bool pressed = await alert(context,
     'Do you want update customer address?');
-
+    if (name.text!=''&&
+    name.text!=''&&
+    address.text!=''&&
+    landMark.text!=''&&
+    area.text!=''&&
+    state.text!=''&&
+    pincode.text!=''&&
+    city.text!=
+    '') {
     if (pressed) {
-      FirebaseFirestore.instance
-          .collection('orders')
-          .doc(widget.orderId)
-          .update({
-        'shippingAddress.name':name.text,
-        'shippingAddress.address':address.text,
-        'shippingAddress.area':area.text,
-        'shippingAddress.city':city.text,
-        'shippingAddress.landMark':landMark.text,
-        'shippingAddress.pincode':pincode.text,
-        'shippingAddress.state':state.text,
-      });
-      Navigator.pop(context);
-      Navigator.pop(context);
-      showUploadMessage(context, 'Address Updated...');
+    FirebaseFirestore.instance
+        .collection('orders')
+        .doc(widget.orderId)
+        .update({
+    'shippingAddress.name':name.text,
+    'shippingAddress.address':address.text,
+    'shippingAddress.area':area.text,
+    'shippingAddress.city':city.text,
+    'shippingAddress.landMark':landMark.text,
+    'shippingAddress.pincode':pincode.text,
+    'shippingAddress.state':state.text,
+    });
+    Navigator.pop(context);
+    showUploadMessage(context, 'Address Updated...');
     }
-
-        }, child: Text('Update')),
+    }else{
+      name.text ==''? errorMsg(context, 'Please Enter name'):
+      address.text ==''? errorMsg(context, 'Please Enter address'):
+      area.text ==''? errorMsg(context, 'Please Enter area'):
+      city.text ==''? errorMsg(context, 'Please Enter city'):
+      landMark.text ==''? errorMsg(context, 'Please Enter landMark'):
+      pincode.text ==''? errorMsg(context, 'Please Enter   pincode'):
+      state.text ==''? errorMsg(context, 'Please Enter state'):'';
+    }
+    },
+    child: Text('Update')),
 
       ],
     );

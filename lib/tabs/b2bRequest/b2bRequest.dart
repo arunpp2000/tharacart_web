@@ -7,6 +7,7 @@ import 'package:tharacart_web/tabs/users/users/userDetailsPage.dart';
 
 import '../../../../../widgets/button.dart';
 import '../dashboard/dashboard.dart';
+import 'b2bDetails.dart';
 
 
 
@@ -18,7 +19,6 @@ class B2bRequest extends StatefulWidget {
 }
 
 class _B2bRequestState extends State<B2bRequest> {
-  List students = [];
   late TextEditingController search = TextEditingController();
   final scaffoldKey = GlobalKey<ScaffoldState>();
   Stream<QuerySnapshot>? userStream;
@@ -28,23 +28,21 @@ class _B2bRequestState extends State<B2bRequest> {
     pageIndex++;
     if (lastDoc == null || pageIndex == 0) {
       ind = 0;
-      userStream = FirebaseFirestore.instance
-          .collection("orders")
-          .where('orderStatus', isEqualTo: selectedIndex)
-          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-          .orderBy('placedDate', descending: true)
+      userStream = FirebaseFirestore
+          .instance
+          .collection("b2bRequests")
+          .where('status', isEqualTo: selectedIndex)
+          .orderBy('time', descending: true)
           .startAfterDocument(lastDocuments[pageIndex - 1]!)
           .limit(limit)
           .snapshots();
     } else {
       ind += limit;
-      userStream = FirebaseFirestore.instance
-          .collection("orders")
-          .where('orderStatus', isEqualTo: selectedIndex)
-          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-          .orderBy('placedDate', descending: true)
+      userStream = FirebaseFirestore
+          .instance
+          .collection("b2bRequests")
+          .where('status', isEqualTo: selectedIndex)
+          .orderBy('time', descending: true)
           .startAfterDocument(lastDocuments[pageIndex - 1]!)
           .startAfterDocument(lastDoc)
           .snapshots();
@@ -56,22 +54,20 @@ class _B2bRequestState extends State<B2bRequest> {
     pageIndex--;
     if (firstDoc == null || pageIndex == 0) {
       ind = 0;
-      userStream = FirebaseFirestore.instance
-          .collection("orders")
-          .where('orderStatus', isEqualTo: selectedIndex)
-          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-          .orderBy('placedDate', descending: true)
+      userStream = FirebaseFirestore
+          .instance
+          .collection("b2bRequests")
+          .where('status', isEqualTo: selectedIndex)
+          .orderBy('time', descending: true)
           .limit(limit)
           .snapshots();
     } else {
       ind -= limit;
-      userStream = FirebaseFirestore.instance
-          .collection("orders")
-          .where('orderStatus', isEqualTo: selectedIndex)
-          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-          .orderBy('placedDate', descending: true)
+      userStream = FirebaseFirestore
+          .instance
+          .collection("b2bRequests")
+          .where('status', isEqualTo: selectedIndex)
+          .orderBy('time', descending: true)
           .startAfterDocument(lastDocuments[pageIndex - 1]!)
           .limit(limit)
           .snapshots();
@@ -91,10 +87,6 @@ class _B2bRequestState extends State<B2bRequest> {
   var firstDoc;
   int limit = 20;
   int selectedIndex = 0;
-  Timestamp? datePicked1;
-  Timestamp? datePicked2;
-  DateTime selectedDate1 = DateTime.now();
-  DateTime selectedDate2 = DateTime.now();
   final scroll = ScrollController();
   @override
   void initState() {
@@ -102,7 +94,7 @@ class _B2bRequestState extends State<B2bRequest> {
     selectedIndex = 0;
     userStream =
         FirebaseFirestore.instance.collection('b2bRequests')
-            .where('status',isEqualTo: 0)
+            .where('status',isEqualTo: 0).limit(limit)
             .orderBy('time',descending: true).snapshots();
   }
 
@@ -174,9 +166,14 @@ class _B2bRequestState extends State<B2bRequest> {
                                         child: InkWell(
                                           onTap: () {
                                             selectedIndex = index;
-                                            FirebaseFirestore.instance.collection('b2bRequests')
-                                                .where('status',isEqualTo: selectedIndex)
-                                                .orderBy('time',descending: true).snapshots();
+                                            userStream = FirebaseFirestore
+                                                .instance
+                                                .collection("b2bRequests")
+                                                .where('status', isEqualTo: selectedIndex)
+                                                .orderBy('time', descending: true)
+                                                .limit(limit)
+                                                .snapshots();
+                                            setState(() {});
                                           },
                                           child: Container(
                                             width: 90,
@@ -274,7 +271,6 @@ class _B2bRequestState extends State<B2bRequest> {
                                     } else {
                                       FirebaseFirestore.instance.collection('b2bRequests')
                                           .where('status',isEqualTo: selectedIndex)
-                                          .orderBy('time',descending: true)
                                     .where('search',
                                     arrayContains: text.toUpperCase())
                                         .snapshots();
@@ -323,8 +319,11 @@ class _B2bRequestState extends State<B2bRequest> {
                                 onPressed: () {
                                   search.clear();
                                   FirebaseFirestore.instance.collection('b2bRequests')
-                                      .where('status',isEqualTo: selectedIndex)
+                                      .where('status',isEqualTo: selectedIndex).limit(limit)
                                       .orderBy('time',descending: true).snapshots();
+                                  setState(() {
+
+                                  });
                                 },
                                 text: 'Clear',
                                 options: FFButtonOptions(
@@ -354,252 +353,257 @@ class _B2bRequestState extends State<B2bRequest> {
                 ],
               ),
               StreamBuilder<QuerySnapshot>(
-                  stream: userStream,
-                  builder: (context, snapshot) {
-                    print(snapshot.error);
-                    if (!snapshot.hasData) {
-                      return Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-                    data = [];
-                    data = snapshot.data!.docs;
-                    if (data.length != 0) {
-                      print(data.length);
-                      lastDoc = snapshot.data?.docs[data.length - 1];
-                      lastDocuments[pageIndex] = lastDoc;
-                      firstDoc = snapshot.data?.docs[0];
-                    }
-                    return data.length == 0
-                        ? LottieBuilder.network(
-                      'https://assets9.lottiefiles.com/packages/lf20_HpFqiS.json',
-                      height: 500,
-                    )
-                        : SizedBox(
-                      width:
-                      // double.infinity,
-                      MediaQuery.of(context).size.width * 0.85,
-                      child: DataTable(
-                        horizontalMargin: 10,
-                        columnSpacing: 20,
-                        columns: [
-                          DataColumn(
-                            label: Text(
-                              "S.No",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11),
+                stream: userStream,
+                builder: (context, snapshot) {
+                  print(snapshot.error);
+                  if (!snapshot.hasData) {
+                    return Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  }
+                  data = [];
+                  data = snapshot.data!.docs;
+                  if (data.length != 0) {
+                    print(data.length);
+                    lastDoc = snapshot.data?.docs[data.length - 1];
+                    lastDocuments[pageIndex] = lastDoc;
+                    firstDoc = snapshot.data?.docs[0];
+                  }
+                  return data.length == 0
+                      ? LottieBuilder.network(
+                    'https://assets9.lottiefiles.com/packages/lf20_HpFqiS.json',
+                    height: 500,
+                  )
+                      :Column(
+                    children: [
+                      SizedBox(
+                        width:
+                        // double.infinity,
+                        MediaQuery.of(context).size.width * 0.85,
+                        child: DataTable(
+                          horizontalMargin: 10,
+                          columnSpacing: 20,
+                          columns: [
+                            DataColumn(
+                              label: Text(
+                                "S.No",
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11),
+                              ),
                             ),
-                          ),
 
-                          DataColumn(
-                            label: Text("Profile",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
-                          ),
-                          DataColumn(
-                            label: Text(
-                              "Name",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11),
+                            DataColumn(
+                              label: Text("Profile",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11)),
                             ),
-                          ),
-                          DataColumn(
-                            label: Text("Email",
+                            DataColumn(
+                              label: Text(
+                                "Name",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
-                          ),
-                          DataColumn(
-                            label: Text("Mobile Number",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
-                          ),
-                          DataColumn(
-                            label: Text("View",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
-                          ),
-                        ],
-                        rows: List.generate(
-                          data.length,
-                              (index) {
-                            String name = data[index]['userName'];
-                            String email = data[index]['email'];
-                            String number = data[index]['mobileNumber'];
-                            String image = data[index]['photoUrl'].toString();
-                            // Timestamp placedDate =
-                            // data[index]['created_time'];
-                            return DataRow(
-                              color: index.isOdd
-                                  ? MaterialStateProperty.all(Colors
-                                  .blueGrey.shade50
-                                  .withOpacity(0.7))
-                                  : MaterialStateProperty.all(
-                                  Colors.blueGrey.shade50),
-                              cells: [
-                                DataCell(Container(
-                                  width:
-                                  MediaQuery.of(context).size.width *
-                                      0.02,
-                                  child: SelectableText(
-                                    (ind == 0
-                                        ? index + 1
-                                        : ind + index + 1)
-                                        .toString(),
+                                    fontSize: 11),
+                              ),
+                            ),
+                            DataColumn(
+                              label: Text("Email",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11)),
+                            ),
+                            DataColumn(
+                              label: Text("Mobile Number",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11)),
+                            ),
+                            DataColumn(
+                              label: Text("View",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11)),
+                            ),
+                          ],
+                          rows: List.generate(
+                            data.length,
+                                (index) {
+                              String name = data[index]['userName'];
+                              String email = data[index]['email'];
+                              String number = data[index]['officialNo'];
+                              String image = data[index]['imageUrl'].toString();
+                              // Timestamp placedDate =
+                              // data[index]['created_time'];
+                              return DataRow(
+                                color: index.isOdd
+                                    ? MaterialStateProperty.all(Colors
+                                    .blueGrey.shade50
+                                    .withOpacity(0.7))
+                                    : MaterialStateProperty.all(
+                                    Colors.blueGrey.shade50),
+                                cells: [
+                                  DataCell(Container(
+                                    width:
+                                    MediaQuery.of(context).size.width *
+                                        0.02,
+                                    child: SelectableText(
+                                      (ind == 0
+                                          ? index + 1
+                                          : ind + index + 1)
+                                          .toString(),
+                                      style: TextStyle(
+                                        fontFamily: 'Lexend Deca',
+                                        color: Colors.black,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  )),
+                                  DataCell(InkWell(
+                                    onTap: () async {
+                                      await showDialog(
+                                          barrierDismissible: true,
+                                          context: context,
+                                          builder: (buildContext) {
+                                            return AlertDialog(
+                                              insetPadding:
+                                              EdgeInsets.all(12),
+                                              content: Center(
+                                                  child: Container(
+                                                    height: 500,
+                                                    width: 500,
+                                                    child: CachedNetworkImage(
+                                                      imageUrl: image,
+                                                    ),
+                                                  )),
+                                              actions: [
+                                                TextButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(
+                                                          context);
+                                                    },
+                                                    child:
+                                                    const Text('back')),
+                                              ],
+                                            );
+                                          });
+                                    },
+                                    child: Container(
+                                        height: 150,
+                                        width: 100,
+                                        child: CachedNetworkImage(
+                                          imageUrl: image,
+                                        )),
+                                  )),
+                                  DataCell(SelectableText(
+                                    name,
                                     style: TextStyle(
                                       fontFamily: 'Lexend Deca',
                                       color: Colors.black,
                                       fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
-                                  ),
-                                )),
-                                DataCell(InkWell(
-                                  onTap: () async {
-                                    await showDialog(
-                                        barrierDismissible: true,
-                                        context: context,
-                                        builder: (buildContext) {
-                                          return AlertDialog(
-                                            insetPadding:
-                                            EdgeInsets.all(12),
-                                            content: Center(
-                                                child: Container(
-                                                  height: 500,
-                                                  width: 500,
-                                                  child: CachedNetworkImage(
-                                                    imageUrl: image,
-                                                  ),
-                                                )),
-                                            actions: [
-                                              TextButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(
-                                                        context);
-                                                  },
-                                                  child:
-                                                  const Text('back')),
-                                            ],
-                                          );
-                                        });
-                                  },
-                                  child: Container(
-                                      height: 150,
-                                      width: 100,
-                                      child: CachedNetworkImage(
-                                        imageUrl: image,
-                                      )),
-                                )),
-                                DataCell(SelectableText(
-                                  name,
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend Deca',
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
-                                DataCell(SelectableText(
-                                  email,
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend Deca',
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
-                                DataCell(SelectableText(
-                                  number ,
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend Deca',
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
-                                DataCell(
-                                  Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: InkWell(
-                                        onTap: () {
-                                          Navigator.push(context, MaterialPageRoute(builder: (context)=>UsersViewWidget(
-                                            id:data[index]['userId'],
-                                          )));
-                                        },
-                                        child: Container(
-                                            height: 30,
-                                            width: 70,
-                                            decoration: BoxDecoration(
-                                                color: primaryColor,
-                                                borderRadius:
-                                                BorderRadius
-                                                    .circular(12),
-                                                border: Border.all(
-                                                    color: Colors.black
-                                                        .withOpacity(
-                                                        0.3))),
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              'view',
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            )),
+                                  )),
+                                  DataCell(SelectableText(
+                                    email,
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend Deca',
+                                      color: Colors.black,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )),
+                                  DataCell(SelectableText(
+                                    number ,
+                                    style: TextStyle(
+                                      fontFamily: 'Lexend Deca',
+                                      color: Colors.black,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  )),
+                                  DataCell(
+                                    Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: InkWell(
+                                          onTap: () {
+                                            Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailsPageWidget(
+                                              id:data[index]['userId'],
+                                            )));
+                                          },
+                                          child: Container(
+                                              height: 30,
+                                              width: 70,
+                                              decoration: BoxDecoration(
+                                                  color: primaryColor,
+                                                  borderRadius:
+                                                  BorderRadius
+                                                      .circular(12),
+                                                  border: Border.all(
+                                                      color: Colors.black
+                                                          .withOpacity(
+                                                          0.3))),
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                'view',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              )),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            );
-                          },
+                                ],
+                              );
+                            },
+                          ),
                         ),
                       ),
-                    );
-                  }),
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    pageIndex == 0
-                        ? SizedBox()
-                        : InkWell(
-                      onTap: () {
-                        prev();
-                      },
-                      child: Container(
-                        height: 40,
-                        width: 100,
-                        decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(10)),
-                        child: Center(child: Text('Previous')),
-                      ),
-                    ),
-                    (lastDoc == null && pageIndex != 0) || data.length < limit
-                        ? SizedBox()
-                        : InkWell(
-                      onTap: () {
-                        next();
-                      },
-                      child: Container(
-                        height: 40,
-                        width: 100,
-                        decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(10)),
-                        child: Center(child: Text('Next')),
-                      ),
-                    )
-                  ],
-                ),
-              )
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            pageIndex == 0
+                                ? SizedBox()
+                                : InkWell(
+                              onTap: () {
+                                prev();
+                              },
+                              child: Container(
+                                height: 40,
+                                width: 100,
+                                decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(10)),
+                                child: Center(child: Text('Previous')),
+                              ),
+                            ),
+                            (lastDoc == null && pageIndex != 0) || data.length < limit
+                                ? SizedBox()
+                                : InkWell(
+                              onTap: () {
+                                next();
+                              },
+                              child: Container(
+                                height: 40,
+                                width: 100,
+                                decoration: BoxDecoration(
+                                    color: Colors.grey[200],
+                                    borderRadius: BorderRadius.circular(10)),
+                                child: Center(child: Text('Next')),
+                              ),
+                            )
+                          ],
+                        ),
+                      )
+                    ],
+                  );
+                }
+              ),
             ],
           ),
         ),

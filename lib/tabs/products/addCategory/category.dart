@@ -1,7 +1,12 @@
 
+import 'dart:html';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 import '../../../widgets/button.dart';
 import '../../../widgets/storage.dart';
@@ -35,7 +40,42 @@ class _AddCategoryState extends State<AddCategory> {
   TextEditingController? search;
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  var pickedFile;
+  final ImagePicker _picker = ImagePicker();
+  late File file;
+  var bytes;
+  Future imgFromGalleryCImage() async {
+    print('----------------------HERkkkE?-------------------------');
+    pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    var fileName = DateTime.now();
+    var ref = await FirebaseStorage.instance.ref().child('proofs/$fileName');
+    Uri blobUri = Uri.parse(pickedFile.path);
+    http.Response response = await http.get(blobUri);
+    await ref
+        .putData(response.bodyBytes, SettableMetadata(contentType: 'image/png'))
+        .then((p0) async {
+      categoryImage = (await ref.getDownloadURL()).toString();
+      print(categoryImage);
+      setState(() {});
+    });
 
+  }
+  Future imgFromGalleryCbanner() async {
+    print('----------------------HERkkkE?-------------------------');
+    pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    var fileName = DateTime.now();
+    var ref = await FirebaseStorage.instance.ref().child('proofs/$fileName');
+    Uri blobUri = Uri.parse(pickedFile.path);
+    http.Response response = await http.get(blobUri);
+    await ref
+        .putData(response.bodyBytes, SettableMetadata(contentType: 'image/png'))
+        .then((p0) async {
+      categoryBanner = (await ref.getDownloadURL()).toString();
+      print(categoryBanner);
+      setState(() {});
+    });
+
+  }
   @override
   void initState() {
     super.initState();
@@ -133,32 +173,7 @@ class _AddCategoryState extends State<AddCategory> {
                 children: [
                   FFButtonWidget(
                     onPressed: () async {
-                      final selectedMedia = await selectMedia(
-                        maxWidth: 1080.00,
-                        maxHeight: 1320.00,
-                      );
-                      if (selectedMedia != null &&
-                          validateFileFormat(
-                              selectedMedia.storagePath,
-                              context)) {
-                        showUploadMessage(
-                            context, 'Uploading file...',
-                            showLoading: true);
-                        final downloadUrl = await uploadData(
-                            selectedMedia.storagePath,
-                            selectedMedia.bytes);
-                        ScaffoldMessenger.of(context)
-                            .hideCurrentSnackBar();
-                        if (downloadUrl != null) {
-                          setState(() =>
-                          categoryImage = downloadUrl);
-                          showUploadMessage(
-                              context, 'Success!');
-                        } else {
-                          showUploadMessage(context,
-                              'Failed to upload media');
-                        }
-                      }
+                      imgFromGalleryCImage();
                     },
                     text: categoryImage==''?'Upload Image':'Change Image',
                     options: FFButtonOptions(
@@ -181,32 +196,7 @@ class _AddCategoryState extends State<AddCategory> {
                   ),
                   FFButtonWidget(
                     onPressed: () async {
-                      final selectedMedia = await selectMedia(
-                        maxWidth: 1080.00,
-                        maxHeight: 1320.00,
-                      );
-                      if (selectedMedia != null &&
-                          validateFileFormat(
-                              selectedMedia.storagePath,
-                              context)) {
-                        showUploadMessage(
-                            context, 'Uploading file...',
-                            showLoading: true);
-                        final downloadUrl = await uploadData(
-                            selectedMedia.storagePath,
-                            selectedMedia.bytes);
-                        ScaffoldMessenger.of(context)
-                            .hideCurrentSnackBar();
-                        if (downloadUrl != null) {
-                          setState(() =>
-                          categoryBanner = downloadUrl);
-                          showUploadMessage(context,
-                              'Media upload Success!');
-                        } else {
-                          showUploadMessage(context,
-                              'Failed to upload media');
-                        }
-                      }
+                      imgFromGalleryCbanner();
                     },
                     text: categoryBanner==''?'Upload Banner':'Change Banner',
                     options: FFButtonOptions(
@@ -632,7 +622,6 @@ class _AddCategoryState extends State<AddCategory> {
                       showUploadMessage(
                           context, "New Category Added...");
 
-                      Navigator.pop(context);
 
 
                     } else {

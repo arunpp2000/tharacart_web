@@ -41,6 +41,7 @@ dependencies:
   firebase_core: ^2.8.0
   firebase_auth: ^4.3.0
   firebase_storage:
+  flutter_localization: ^0.1.10
   cloud_firestore: ^4.4.5
   cached_network_image:
   badges:
@@ -64,6 +65,15 @@ dependencies:
   open_file: ^3.2.1
   timeago:
   animated_custom_dropdown:
+  file_picker:
+  csv:
+  excel:
+  universal_html:
+  google_sign_in_web:
+  shared_preferences:
+  flutter_multi_select_items: ^0.4.2
+  images_picker:
+
 
 
 

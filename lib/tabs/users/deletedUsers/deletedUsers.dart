@@ -26,57 +26,89 @@ class _DeletedUsersState extends State<DeletedUsers> {
   bool nxtVal = false;
   int ind = 0;
   next() {
-    pageIndex++;
-    if (lastDoc == null || pageIndex == 0) {
-      ind = 0;
-      userStream = FirebaseFirestore.instance
-          .collection("orders")
-          .where('orderStatus', isEqualTo: selectedIndex)
-          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-          .orderBy('placedDate', descending: true)
-          .startAfterDocument(lastDocuments[pageIndex - 1]!)
-          .limit(limit)
-          .snapshots();
+    if (selectedIndex == 0) {
+      pageIndex++;
+      if (lastDoc == null || pageIndex == 0) {
+        ind = 0;
+        userStream = FirebaseFirestore.instance
+            .collection('deletedUsers')
+            .where('b2b', isEqualTo: false)
+            .startAfterDocument(lastDocuments[pageIndex - 1]!)
+            .limit(limit)
+            .snapshots();
+      } else {
+        ind += limit;
+        userStream = FirebaseFirestore.instance
+            .collection('deletedUsers')
+            .where('b2b', isEqualTo: false).limit(limit)
+            .startAfterDocument(lastDocuments[pageIndex - 1]!)
+            .startAfterDocument(lastDoc)
+            .snapshots();
+      }
     } else {
-      ind += limit;
-      userStream = FirebaseFirestore.instance
-          .collection("orders")
-          .where('orderStatus', isEqualTo: selectedIndex)
-          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-          .orderBy('placedDate', descending: true)
-          .startAfterDocument(lastDocuments[pageIndex - 1]!)
-          .startAfterDocument(lastDoc)
-          .snapshots();
+      pageIndex++;
+      if (lastDoc == null || pageIndex == 0) {
+        ind = 0;
+        userStream = FirebaseFirestore.instance
+            .collection('deletedUsers')
+            .where('b2b', isEqualTo: true)
+            .startAfterDocument(lastDocuments[pageIndex - 1]!)
+            .limit(limit)
+            .snapshots();
+      } else {
+        ind += limit;
+        userStream = FirebaseFirestore.instance
+            .collection('deletedUsers')
+            .where('b2b', isEqualTo: true).limit(limit)
+            .startAfterDocument(lastDocuments[pageIndex - 1]!)
+            .startAfterDocument(lastDoc)
+            .snapshots();
+      }
     }
+
     setState(() {});
   }
 
   prev() {
-    pageIndex--;
-    if (firstDoc == null || pageIndex == 0) {
-      ind = 0;
-      userStream = FirebaseFirestore.instance
-          .collection("orders")
-          .where('orderStatus', isEqualTo: selectedIndex)
-          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-          .orderBy('placedDate', descending: true)
-          .limit(limit)
-          .snapshots();
-    } else {
-      ind -= limit;
-      userStream = FirebaseFirestore.instance
-          .collection("orders")
-          .where('orderStatus', isEqualTo: selectedIndex)
-          .where('placedDate', isGreaterThanOrEqualTo: datePicked1)
-          .where('placedDate', isLessThanOrEqualTo: datePicked2)
-          .orderBy('placedDate', descending: true)
-          .startAfterDocument(lastDocuments[pageIndex - 1]!)
-          .limit(limit)
-          .snapshots();
+    if(selectedIndex==0){
+      pageIndex--;
+      if (firstDoc == null || pageIndex == 0) {
+        ind = 0;
+        userStream = FirebaseFirestore.instance
+            .collection('deletedUsers')
+            .where('b2b', isEqualTo: false)
+            .limit(limit)
+            .snapshots();
+      } else {
+        ind -= limit;
+        userStream = FirebaseFirestore.instance
+            .collection('deletedUsers')
+            .where('b2b', isEqualTo: false)
+            .startAfterDocument(lastDocuments[pageIndex - 1]!)
+            .limit(limit)
+            .snapshots();
+      }
+    }else{
+      pageIndex--;
+      if (firstDoc == null || pageIndex == 0) {
+        ind = 0;
+        userStream = FirebaseFirestore.instance
+            .collection('deletedUsers')
+            .where('b2b', isEqualTo: true)
+            .limit(limit)
+            .snapshots();
+      } else {
+        ind -= limit;
+        userStream = FirebaseFirestore.instance
+            .collection('deletedUsers')
+            .where('b2b', isEqualTo: true)
+            .startAfterDocument(lastDocuments[pageIndex - 1]!)
+            .limit(limit)
+            .snapshots();
+      }
+
     }
+
     setState(() {});
   }
 
@@ -126,7 +158,7 @@ class _DeletedUsersState extends State<DeletedUsers> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Users',
+                        'Deleted Users',
                         style: TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 25,
@@ -414,233 +446,261 @@ class _DeletedUsersState extends State<DeletedUsers> {
                       'https://assets9.lottiefiles.com/packages/lf20_HpFqiS.json',
                       height: 500,
                     )
-                        : SizedBox(
-                      width:
-                      // double.infinity,
-                      MediaQuery.of(context).size.width * 0.85,
-                      child: DataTable(
-                        horizontalMargin: 10,
-                        columnSpacing: 20,
-                        columns: [
-                          DataColumn(
-                            label: Text(
-                              "S.No",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11),
-                            ),
-                          ),
-
-                          DataColumn(
-                            label: Text("Profile",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
-                          ),
-                          DataColumn(
-                            label: Text(
-                              "Name",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11),
-                            ),
-                          ),
-                          DataColumn(
-                            label: Text("Email",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
-                          ),
-                          DataColumn(
-                            label: Text("Mobile Number",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
-                          ),
-                          DataColumn(
-                            label: Text("View",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11)),
-                          ),
-                        ],
-                        rows: List.generate(
-                          data.length,
-                              (index) {
-                            //String name = data[index]['fullName'];
-                            String name = '';
-                            String email = data[index]['email'];
-                            String number = data[index]['mobileNumber'];
-                            // String image = data[index]['photoUrl'].toString();
-                           String image = '';
-                            // Timestamp placedDate =
-                            // data[index]['created_time'];
-                            return DataRow(
-                              color: index.isOdd
-                                  ? MaterialStateProperty.all(Colors
-                                  .blueGrey.shade50
-                                  .withOpacity(0.7))
-                                  : MaterialStateProperty.all(
-                                  Colors.blueGrey.shade50),
-                              cells: [
-                                DataCell(Container(
-                                  width:
-                                  MediaQuery.of(context).size.width *
-                                      0.02,
-                                  child: SelectableText(
-                                    (ind == 0
-                                        ? index + 1
-                                        : ind + index + 1)
-                                        .toString(),
-                                    style: TextStyle(
-                                      fontFamily: 'Lexend Deca',
-                                      color: Colors.black,
-                                      fontSize: 11,
+                        : Column(
+                      children: [
+                        SizedBox(
+                          width:
+                          // double.infinity,
+                          MediaQuery.of(context).size.width * 0.85,
+                          child: DataTable(
+                            horizontalMargin: 10,
+                            columnSpacing: 20,
+                            columns: [
+                              DataColumn(
+                                label: Text(
+                                  "S.No",
+                                  style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                )),
-                                DataCell(InkWell(
-                                  onTap: () async {
-                                    await showDialog(
-                                        barrierDismissible: true,
-                                        context: context,
-                                        builder: (buildContext) {
-                                          return AlertDialog(
-                                            insetPadding:
-                                            EdgeInsets.all(12),
-                                            content: Center(
-                                                child: Container(
-                                                  height: 500,
-                                                  width: 500,
-                                                  child: CachedNetworkImage(
-                                                    imageUrl: image,
-                                                  ),
+                                      fontSize: 11),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text("Profile",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11)),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  "Name",
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text("Email",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11)),
+                              ),
+                              DataColumn(
+                                label: Text("Mobile Number",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11)),
+                              ),
+                              DataColumn(
+                                label: Text("View",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 11)),
+                              ),
+                            ],
+                            rows: List.generate(
+                              data.length,
+                                  (index) {
+                                String name='';
+                                String email='';
+                                String number='';
+                                String image='';
+                                try{
+                                  name = data[index]['fullName'];
+                                  email = data[index]['email'];
+                                  number = data[index]['mobileNumber'];
+                                  image = data[index]['photoUrl'].toString();
+                                }catch(e){
+
+                                }
+
+                                return DataRow(
+                                  color: index.isOdd
+                                      ? MaterialStateProperty.all(Colors
+                                      .blueGrey.shade50
+                                      .withOpacity(0.7))
+                                      : MaterialStateProperty.all(
+                                      Colors.blueGrey.shade50),
+                                  cells: [
+                                    DataCell(Container(
+                                      width: MediaQuery.of(context)
+                                          .size
+                                          .width *
+                                          0.02,
+                                      child: SelectableText(
+                                        (ind == 0
+                                            ? index + 1
+                                            : ind + index + 1)
+                                            .toString(),
+                                        style: TextStyle(
+                                          fontFamily: 'Lexend Deca',
+                                          color: Colors.black,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    )),
+                                    DataCell(InkWell(
+                                      onTap: () async {
+                                        await showDialog(
+                                            barrierDismissible: true,
+                                            context: context,
+                                            builder: (buildContext) {
+                                              return AlertDialog(
+                                                insetPadding:
+                                                EdgeInsets.all(12),
+                                                content: Center(
+                                                    child: Container(
+                                                      height: 500,
+                                                      width: 500,
+                                                      child:
+                                                      CachedNetworkImage(
+                                                        imageUrl: image,
+                                                      ),
+                                                    )),
+                                                actions: [
+                                                  TextButton(
+                                                      onPressed: () {
+                                                        Navigator.pop(
+                                                            context);
+                                                      },
+                                                      child: const Text(
+                                                          'back')),
+                                                ],
+                                              );
+                                            });
+                                      },
+                                      child: Container(
+                                          height: 150,
+                                          width: 100,
+                                          child: CachedNetworkImage(
+                                            imageUrl: image,
+                                          )),
+                                    )),
+                                    DataCell(SelectableText(
+                                      name!,
+                                      style: TextStyle(
+                                        fontFamily: 'Lexend Deca',
+                                        color: Colors.black,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )),
+                                    DataCell(SelectableText(
+                                      email!,
+                                      style: TextStyle(
+                                        fontFamily: 'Lexend Deca',
+                                        color: Colors.black,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )),
+                                    DataCell(SelectableText(
+                                      number,
+                                      style: TextStyle(
+                                        fontFamily: 'Lexend Deca',
+                                        color: Colors.black,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )),
+                                    DataCell(
+                                      Padding(
+                                        padding: EdgeInsets.all(8.0),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: InkWell(
+                                            onTap: () {
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          UsersViewWidget(
+                                                            id: data[
+                                                            index]
+                                                            [
+                                                            'userId'],
+                                                          )));
+                                            },
+                                            child: Container(
+                                                height: 30,
+                                                width: 70,
+                                                decoration: BoxDecoration(
+                                                    color: primaryColor,
+                                                    borderRadius:
+                                                    BorderRadius
+                                                        .circular(12),
+                                                    border: Border.all(
+                                                        color: Colors
+                                                            .black
+                                                            .withOpacity(
+                                                            0.3))),
+                                                alignment:
+                                                Alignment.center,
+                                                child: Text(
+                                                  'view',
+                                                  style: TextStyle(
+                                                      color:
+                                                      Colors.white),
                                                 )),
-                                            actions: [
-                                              TextButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(
-                                                        context);
-                                                  },
-                                                  child:
-                                                  const Text('back')),
-                                            ],
-                                          );
-                                        });
-                                  },
-                                  child: Container(
-                                      height: 150,
-                                      width: 100,
-                                      child: CachedNetworkImage(
-                                        imageUrl: image,
-                                      )),
-                                )),
-                                DataCell(SelectableText(
-                                  name,
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend Deca',
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
-                                DataCell(SelectableText(
-                                  email,
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend Deca',
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
-                                DataCell(SelectableText(
-                                  number ,
-                                  style: TextStyle(
-                                    fontFamily: 'Lexend Deca',
-                                    color: Colors.black,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )),
-                                DataCell(
-                                  Padding(
-                                    padding: EdgeInsets.all(8.0),
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: InkWell(
-                                        onTap: () {
-                                          Navigator.push(context, MaterialPageRoute(builder: (context)=>DeletedUsersViewWidget(
-                                            id:data[index]['userId'],
-                                          )));
-                                        },
-                                        child: Container(
-                                            height: 30,
-                                            width: 70,
-                                            decoration: BoxDecoration(
-                                                color: primaryColor,
-                                                borderRadius:
-                                                BorderRadius
-                                                    .circular(12),
-                                                border: Border.all(
-                                                    color: Colors.black
-                                                        .withOpacity(
-                                                        0.3))),
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              'view',
-                                              style: TextStyle(
-                                                  color: Colors.white),
-                                            )),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
                         ),
-                      ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Row(
+                            mainAxisAlignment:
+                            MainAxisAlignment.spaceAround,
+                            children: [
+                              pageIndex == 0
+                                  ? SizedBox()
+                                  : InkWell(
+                                onTap: () {
+                                  prev();
+                                },
+                                child: Container(
+                                  height: 40,
+                                  width: 100,
+                                  decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius:
+                                      BorderRadius.circular(
+                                          10)),
+                                  child: Center(
+                                      child: Text('Previous')),
+                                ),
+                              ),
+                              (lastDoc == null && pageIndex != 0) ||
+                                  data.length < limit
+                                  ? SizedBox()
+                                  : InkWell(
+                                onTap: () {
+                                  next();
+                                },
+                                child: Container(
+                                  height: 40,
+                                  width: 100,
+                                  decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius:
+                                      BorderRadius.circular(
+                                          10)),
+                                  child:
+                                  Center(child: Text('Next')),
+                                ),
+                              )
+                            ],
+                          ),
+                        )
+                      ],
                     );
                   }),
-              Padding(
-                padding: const EdgeInsets.only(top: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    pageIndex == 0
-                        ? SizedBox()
-                        : InkWell(
-                      onTap: () {
-                        prev();
-                      },
-                      child: Container(
-                        height: 40,
-                        width: 100,
-                        decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(10)),
-                        child: Center(child: Text('Previous')),
-                      ),
-                    ),
-                    (lastDoc == null && pageIndex != 0) || data.length < limit
-                        ? SizedBox()
-                        : InkWell(
-                      onTap: () {
-                        next();
-                      },
-                      child: Container(
-                        height: 40,
-                        width: 100,
-                        decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(10)),
-                        child: Center(child: Text('Next')),
-                      ),
-                    )
-                  ],
-                ),
-              )
             ],
           ),
         ),

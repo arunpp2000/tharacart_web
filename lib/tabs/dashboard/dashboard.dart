@@ -1,13 +1,19 @@
 import 'package:badges/badges.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../login/login.dart';
 
 var scrwidth;
 var scrheight;
 var primaryColor;
 
 ScrollController scroll = ScrollController();
+
 class Dashboard extends StatefulWidget {
   const Dashboard({Key? key}) : super(key: key);
 
@@ -16,18 +22,26 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-
   @override
   void initState() {
-   scroll = ScrollController();
+    scroll = ScrollController();
     // TODO: implement initState
     super.initState();
   }
+
+  _logout() async {
+    await FirebaseAuth.instance.signOut();
+    //googleSignIn.signOut();
+    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => LoginPageWidget()),
+        (route) => false);
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     scrwidth = MediaQuery.of(context).size.width;
     scrheight = MediaQuery.of(context).size.height;
-     primaryColor=Color(0xff5B19A8);
+    primaryColor = Color(0xff5B19A8);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -50,15 +64,23 @@ class _DashboardState extends State<Dashboard> {
                       ),
                     ),
                   ),
-                  Container(
-                    color: primaryColor,
-                    height: scrheight * 0.08,
-                    width: scrwidth * 0.15,
-                    child: const Center(
-                        child: Text(
-                      'Logout',
-                      style: TextStyle(color: Colors.white),
-                    )),
+                  InkWell(
+                    onTap: () async {
+                      final SharedPreferences prefs = await SharedPreferences.getInstance();
+                      prefs.remove('isLoggedIn');
+                      userLogged = false;
+                      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context)=>LoginPageWidget()), (route) => false);
+                    },
+                    child: Container(
+                      color: primaryColor,
+                      height: scrheight * 0.08,
+                      width: scrwidth * 0.15,
+                      child: const Center(
+                          child: Text(
+                        'Logout',
+                        style: TextStyle(color: Colors.white),
+                      )),
+                    ),
                   ),
                 ],
               ),
@@ -70,7 +92,10 @@ class _DashboardState extends State<Dashboard> {
               padding: EdgeInsetsDirectional.fromSTEB(20, 30, 20, 0),
               child: Row(
                 children: [
-                  Text('Sales Report',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20),),
+                  Text(
+                    'Sales Report',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  ),
                 ],
               ),
             ),
@@ -105,11 +130,11 @@ class _DashboardState extends State<Dashboard> {
                             children: [
                               Padding(
                                 padding:
-                                EdgeInsetsDirectional.fromSTEB(0, 0, 0, 8),
+                                    EdgeInsetsDirectional.fromSTEB(0, 0, 0, 8),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
                                   mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Icon(
                                       Icons.local_police_rounded,
@@ -133,7 +158,8 @@ class _DashboardState extends State<Dashboard> {
                                 ),
                               ),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 children: [
                                   Column(
                                     children: [
@@ -151,13 +177,13 @@ class _DashboardState extends State<Dashboard> {
                                                   fontWeight: FontWeight.bold,
                                                 )
 
-                                              // FlutterFlowTheme.bodyText1.override(
-                                              //   fontFamily: 'Lexend Deca',
-                                              //   color: Color(0xFF39D2C0),
-                                              //   fontSize: 14,
-                                              //   fontWeight: FontWeight.bold,
-                                              // ),
-                                            ),
+                                                // FlutterFlowTheme.bodyText1.override(
+                                                //   fontFamily: 'Lexend Deca',
+                                                //   color: Color(0xFF39D2C0),
+                                                //   fontSize: 14,
+                                                //   fontWeight: FontWeight.bold,
+                                                // ),
+                                                ),
                                           ],
                                         ),
                                       ),
@@ -270,7 +296,8 @@ class _DashboardState extends State<Dashboard> {
                                 ),
                               ),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 children: [
                                   Column(
                                     children: [
@@ -387,11 +414,11 @@ class _DashboardState extends State<Dashboard> {
                             children: [
                               Padding(
                                 padding:
-                                EdgeInsetsDirectional.fromSTEB(0, 0, 0, 8),
+                                    EdgeInsetsDirectional.fromSTEB(0, 0, 0, 8),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
                                   mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Icon(
                                       Icons.local_police_rounded,
@@ -415,7 +442,8 @@ class _DashboardState extends State<Dashboard> {
                                 ),
                               ),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 children: [
                                   Column(
                                     children: [
@@ -433,13 +461,13 @@ class _DashboardState extends State<Dashboard> {
                                                   fontWeight: FontWeight.bold,
                                                 )
 
-                                              // FlutterFlowTheme.bodyText1.override(
-                                              //   fontFamily: 'Lexend Deca',
-                                              //   color: Color(0xFF39D2C0),
-                                              //   fontSize: 14,
-                                              //   fontWeight: FontWeight.bold,
-                                              // ),
-                                            ),
+                                                // FlutterFlowTheme.bodyText1.override(
+                                                //   fontFamily: 'Lexend Deca',
+                                                //   color: Color(0xFF39D2C0),
+                                                //   fontSize: 14,
+                                                //   fontWeight: FontWeight.bold,
+                                                // ),
+                                                ),
                                           ],
                                         ),
                                       ),
@@ -524,11 +552,11 @@ class _DashboardState extends State<Dashboard> {
                             children: [
                               Padding(
                                 padding:
-                                EdgeInsetsDirectional.fromSTEB(0, 0, 0, 8),
+                                    EdgeInsetsDirectional.fromSTEB(0, 0, 0, 8),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
                                   mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Icon(
                                       Icons.local_police_rounded,
@@ -552,7 +580,8 @@ class _DashboardState extends State<Dashboard> {
                                 ),
                               ),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 children: [
                                   Column(
                                     children: [
@@ -570,13 +599,13 @@ class _DashboardState extends State<Dashboard> {
                                                   fontWeight: FontWeight.bold,
                                                 )
 
-                                              // FlutterFlowTheme.bodyText1.override(
-                                              //   fontFamily: 'Lexend Deca',
-                                              //   color: Color(0xFF39D2C0),
-                                              //   fontSize: 14,
-                                              //   fontWeight: FontWeight.bold,
-                                              // ),
-                                            ),
+                                                // FlutterFlowTheme.bodyText1.override(
+                                                //   fontFamily: 'Lexend Deca',
+                                                //   color: Color(0xFF39D2C0),
+                                                //   fontSize: 14,
+                                                //   fontWeight: FontWeight.bold,
+                                                // ),
+                                                ),
                                           ],
                                         ),
                                       ),
@@ -644,7 +673,7 @@ class _DashboardState extends State<Dashboard> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(left: 20.0,right: 20),
+              padding: const EdgeInsets.only(left: 20.0, right: 20),
               child: Divider(
                 color: Colors.deepPurple,
               ),

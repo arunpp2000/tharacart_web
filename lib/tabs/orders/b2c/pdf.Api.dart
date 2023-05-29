@@ -10,6 +10,35 @@ class PdfApi {
     final file =  File('$path/$fileName');
     await file.writeAsBytes(bytes,flush: true);
   }
+
+  static Future<File> saveSurveyDocument({
+    String? name,
+    Document? pdf,
+  }) async {
+    final bytes = await pdf!.save();
+
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/$name');
+
+
+    var directory = await getExternalStorageDirectory();
+    String outputFile =
+        directory!.path + "/Survey/$name.pdf";
+
+    File(outputFile)
+      ..createSync(recursive: true)
+      ..writeAsBytesSync(bytes!);
+
+
+
+    print(file);
+    OpenFile.open(outputFile);
+
+
+    await file.writeAsBytes(await pdf!.save());
+
+    return file;
+  }
   static Future<File> saveB2CDocument({
     String? name,
     Document? pdf,

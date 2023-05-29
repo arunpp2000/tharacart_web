@@ -3,14 +3,17 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import '../../../widgets/button.dart';
+import '../../../widgets/storage.dart';
 import '../../../widgets/uploadmedia.dart';
 import '../../dashboard/dashboard.dart';
 import 'addProducts.dart';
 import 'b2bDelhiDialogue.dart';
 import 'b2bDialogueBox.dart';
 import 'b2cDialogueBox.dart';
+import 'edit.dart';
 
 class Editproduct extends StatefulWidget {
   Editproduct({
@@ -136,8 +139,6 @@ class _EditproductState extends State<Editproduct> {
               }
             }
             list.removeAt(i);
-
-
             doc.reference.update({
               'bagIds':FieldValue.arrayRemove([widget.productId]),
               'bag':list,
@@ -188,7 +189,7 @@ class _EditproductState extends State<Editproduct> {
   @override
   void initState() {
     super.initState();
-
+    selectedIndex=0;
     // print('product id '+widget.productId);
     productName = TextEditingController();
     productCode = TextEditingController();
@@ -477,6 +478,11 @@ class _EditproductState extends State<Editproduct> {
     }
     return caseSearchList;
   }
+  int? selectedIndex;
+  List datas = [
+    'Update',
+    'Image',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -485,11 +491,16 @@ class _EditproductState extends State<Editproduct> {
         appBar: AppBar(
           backgroundColor:primaryColor,
           automaticallyImplyLeading: true,
-          title: Text(
-            'Edit Product',
-            style: TextStyle(
-                fontFamily: 'Poppins',
-                color: Colors.white
+          title: InkWell(
+            onTap: (){
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>Edit()));
+            },
+            child: Text(
+              'Edit Product',
+              style: TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Colors.white
+              ),
             ),
           ),
           actions: [],
@@ -498,7 +509,107 @@ class _EditproductState extends State<Editproduct> {
         ),
         body: SafeArea(
             child: Column(children: [
-              Expanded(
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Material(
+                      color: Colors.transparent,
+                      elevation: 5,
+                      child: Container(
+                        width: 550,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 1,
+                              color: Color(0xFFF1F4F8),
+                              offset: Offset(0, 0),
+                            )
+                          ],
+                        ),
+                        child: Padding(
+                          padding:
+                          EdgeInsetsDirectional.fromSTEB(24, 12, 24, 12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              SingleChildScrollView(
+                                controller: scroll,
+                                child: Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                    children:
+                                    List.generate(datas.length, (index) {
+                                      return Padding(
+                                        padding:
+                                        const EdgeInsets.only(right: 10),
+                                        child: InkWell(
+                                          onTap: () {
+                                            selectedIndex = index;
+
+                                            setState(() {});
+                                          },
+                                          child: Container(
+                                            width: 90,
+                                            height: 80,
+                                            decoration: BoxDecoration(
+                                              color: selectedIndex == index
+                                                  ? Colors.teal
+                                                  : Color(0xFFF1F4F8),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  blurRadius: 5,
+                                                  color: Color(0x3B000000),
+                                                  offset: Offset(0, 2),
+                                                )
+                                              ],
+                                              borderRadius:
+                                              BorderRadius.circular(8),
+                                            ),
+                                            child: Padding(
+                                              padding: EdgeInsetsDirectional
+                                                  .fromSTEB(4, 4, 4, 4),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.max,
+                                                mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                                children: [
+                                                  Center(
+                                                    child: Text(
+                                                      datas[index],
+                                                      style: TextStyle(
+                                                        fontFamily:
+                                                        'Lexend Deca',
+                                                        color: selectedIndex ==
+                                                            index
+                                                            ? Colors.white
+                                                            : Color(0xFF090F13),
+                                                        fontSize: 9,
+                                                        fontWeight:
+                                                        FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    })),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+             selectedIndex==0? Expanded(
                   child: StreamBuilder<DocumentSnapshot>(
                       stream: FirebaseFirestore.instance.collection('products').doc(widget.productId).snapshots(),
                       builder: (context, snapshot) {
@@ -3163,7 +3274,355 @@ class _EditproductState extends State<Editproduct> {
                             ],
                           ),
                         );
-                      }))
+                      })):  Expanded(
+                 child: StreamBuilder<DocumentSnapshot>(
+                     stream: FirebaseFirestore.instance.collection('products').doc(widget.productId).snapshots(),
+                     builder: (context, snapshot) {
+                       // Customize what your widget looks like when it's loading.
+                       if (!snapshot.hasData) {
+                         return Center(child: CircularProgressIndicator());
+                       }
+                       // List<NewProductsRecord>
+                       //     editproductNewProductsRecordList =
+                       //     snapshot.data;
+                       // Customize what your widget looks like with no query results.
+                       if (!snapshot.data!.exists) {
+                         return Text('No Data');
+                         // For now, we'll just include some dummy data.
+
+                       }
+
+
+                       images = snapshot.data?.get('imageId').toList();
+                       videos = snapshot.data?.get('videoUrl').toList();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                       //
+
+                       uploadedFileUrl1 =
+                       snapshot.data?.get('imageId').length == 0
+                           ? ""
+                           : snapshot.data?.get('imageId')[0];
+                       videoUrl=snapshot.data?.get('videoUrl').length==0
+                           ? ""
+                           :snapshot.data?.get('videoUrl')[0];
+
+                       return ListView(
+                           shrinkWrap: true,
+                           children: [
+                             Row(
+                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                               children: [
+                                 IconButton(
+                                   onPressed: () async {
+                                     final selectedMedia = await selectMedia(
+                                       maxWidth: 1080.00,
+                                       maxHeight: 1320.00,
+                                     );
+                                     if (selectedMedia != null &&
+                                         validateFileFormat(
+                                             selectedMedia.storagePath,
+                                             context)) {
+                                       showUploadMessage(
+                                           context, 'Uploading file...',
+                                           showLoading: true);
+                                       final downloadUrl = await uploadData(
+                                           selectedMedia.storagePath,
+                                           selectedMedia.bytes);
+                                       await FirebaseFirestore.instance
+                                           .collection('products')
+                                           .doc(widget
+                                           .productId)
+                                           .update({
+                                         'imageId': FieldValue.arrayUnion(
+                                             [downloadUrl]),
+                                       }).then((value) {
+                                         setState(() {
+                                           images.add(downloadUrl);
+                                         });
+                                       });
+                                       ScaffoldMessenger.of(context)
+                                           .hideCurrentSnackBar();
+                                       if (downloadUrl != null) {
+                                         setState(() =>
+                                         uploadedFileUrl1 = downloadUrl);
+                                         showUploadMessage(context, 'Success!');
+                                       } else {
+                                         showUploadMessage(
+                                             context, 'Failed to upload media');
+                                       }
+                                     }
+                                   },
+                                   icon: Icon(
+                                     Icons.image,
+                                     color: Colors.black,
+                                     size: 30,
+                                   ),
+                                   iconSize: 30,
+                                 ),
+                                 IconButton(
+                                   onPressed: () async {
+                                     final selectedMedia = await selectMedia(
+
+                                         isVideo: true
+
+                                     );
+                                     if (selectedMedia != null &&
+                                         validateFileFormat(
+
+                                             selectedMedia.storagePath,
+                                             context)) {
+                                       showUploadMessage(
+                                           context, 'Uploading Video...',
+                                           showLoading: true);
+                                       final downloadUrl = await uploadData(
+                                           selectedMedia.storagePath,
+                                           selectedMedia.bytes);
+                                       await FirebaseFirestore.instance
+                                           .collection('products')
+                                           .doc(widget
+                                           .productId)
+                                           .update({
+                                         'videoUrl': FieldValue.arrayUnion(
+                                             [downloadUrl]),
+                                       }).then((value) {
+                                         setState(() {
+                                           videos.add(downloadUrl);
+                                         });
+                                       });
+                                       ScaffoldMessenger.of(context)
+                                           .hideCurrentSnackBar();
+                                       if (downloadUrl != null) {
+                                         setState(() =>
+                                         videoUrl = downloadUrl);
+                                         print(videoUrl);
+                                         showUploadMessage(context,
+                                             'Media upload Success!');
+                                       } else {
+                                         showUploadMessage(context,
+                                             'Failed to upload media');
+                                       }
+                                     }
+                                   },
+                                   icon: Icon(
+                                     Icons.slow_motion_video_outlined,
+                                     color: Colors.black,
+                                     size: 30,
+                                   ),
+                                   iconSize: 30,
+                                 )
+                               ],
+                             ),
+                             Text('Images',style:TextStyle(
+                                 fontSize: 20,fontWeight: FontWeight.bold
+                             ),textAlign: TextAlign.center,),
+                             Container(
+
+                               child: GridView.builder(
+                                 padding: EdgeInsets.zero,
+                                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                   crossAxisCount: 4,
+                                   crossAxisSpacing: 15,
+                                   mainAxisSpacing: 15,
+                                   childAspectRatio: 1
+                                 ),
+                                 physics: NeverScrollableScrollPhysics(),
+
+                                 shrinkWrap: true,
+                                 itemCount: images.length,
+                                 itemBuilder: (context, listViewIndex) {
+                                   imagesItem = images[listViewIndex];
+
+                                   return Card(
+                                     elevation: 5,
+                                     child: Container(
+                                       decoration: BoxDecoration(
+                                         image: DecorationImage(
+                                           image: NetworkImage(imagesItem),
+                                           fit: BoxFit.cover
+                                         )
+                                       ),
+                                       child: Align(
+                                         alignment: Alignment.topRight,
+                                         child: Padding(
+                                           padding: const EdgeInsets.all(15.0),
+                                           child: Container(
+                                             decoration: BoxDecoration(
+                                               color: Colors.red.withOpacity(0.5),
+                                               shape: BoxShape.circle
+                                             ),
+                                             child: Padding(
+                                               padding: const EdgeInsets.all(7.5),
+                                               child: IconButton(
+                                                 onPressed: () async {
+                                                   await FirebaseFirestore.instance
+                                                       .collection('products')
+                                                       .doc(
+                                                       widget.productId)
+                                                       .update({
+                                                     'imageId': FieldValue.arrayRemove(
+                                                         [imagesItem]),
+                                                   }).then((value) {
+                                                     FirebaseStorage.instance
+                                                         .refFromURL(imagesItem)
+                                                         .delete();
+                                                     setState(() {
+                                                       images.remove(imagesItem);
+                                                     });
+                                                   });
+                                                 },
+                                                 icon: Icon(
+                                                   Icons.delete,
+                                                   color: Colors.black,
+                                                   size: 30,
+                                                 ),
+                                                 iconSize: 30,
+                                               ),
+                                             ),
+                                           ),
+                                         ),
+                                       ),
+                                     ),
+                                   );
+                                   //   Container(
+                                   //   color: Colors.red,
+                                   //   child: ListTile(
+                                   //     title: Image.network(
+                                   //       imagesItem,
+                                   //
+                                   //       fit: BoxFit.cover,
+                                   //     ),
+                                   //     trailing: IconButton(
+                                   //       onPressed: () async {
+                                   //         await FirebaseFirestore.instance
+                                   //             .collection('products')
+                                   //             .doc(
+                                   //             widget.productId)
+                                   //             .update({
+                                   //           'imageId': FieldValue.arrayRemove(
+                                   //               [imagesItem]),
+                                   //         }).then((value) {
+                                   //           FirebaseStorage.instance
+                                   //               .refFromURL(imagesItem)
+                                   //               .delete();
+                                   //           setState(() {
+                                   //             images.remove(imagesItem);
+                                   //           });
+                                   //         });
+                                   //       },
+                                   //       icon: Icon(
+                                   //         Icons.delete,
+                                   //         color: Colors.black,
+                                   //         size: 30,
+                                   //       ),
+                                   //       iconSize: 30,
+                                   //     ),
+                                   //   ),
+                                   // );
+                                   // return CachedNetworkImage(
+                                   //   imageUrl:imagesItem,
+                                   //   width: 100,
+                                   //   height: 100,
+                                   //   fit: BoxFit.cover,
+                                   // );
+                                 },
+                               ),
+                             ),
+                             Padding(
+                               padding: const EdgeInsets.only(top: 10),
+                               child: Text('Videos',style:TextStyle(
+                                   fontSize: 20,fontWeight: FontWeight.bold
+                               ),textAlign: TextAlign.center,),
+                             ),
+                             Container(
+
+                               child: GridView.builder(
+                                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                     crossAxisCount: 4,
+                                     crossAxisSpacing: 15,
+                                     mainAxisSpacing: 15,
+                                     childAspectRatio: 1
+                                 ),
+                                 padding: EdgeInsets.zero,
+                                 physics: NeverScrollableScrollPhysics(),
+                                 scrollDirection: Axis.vertical,
+                                 shrinkWrap: true,
+                                 itemCount: videos.length,
+                                 itemBuilder: (context, listViewIndex) {
+                                   final video = videos[listViewIndex];
+                                   return ListTile(
+                                     title:  InkWell(
+                                       onTap: ()
+                                       {
+                                         // Navigator.push(context, MaterialPageRoute(builder: (context)=>VideoViewer(
+                                         //   video: video,
+                                         // )));
+                                       },
+                                       child: Container(
+                                         height: 150,
+                                         decoration: BoxDecoration(
+                                             image: DecorationImage(
+                                               fit: BoxFit.fill,
+                                               image: Image.network(
+                                                   imagesItem,height: 100).image,
+                                             )
+
+                                         ),
+                                         child: Center(child: Icon(Icons.play_circle_outline,size: 50,color: Colors.white,)),
+                                       ),
+                                     ),
+                                     trailing: IconButton(
+                                       onPressed: () async {
+                                         await FirebaseFirestore.instance
+                                             .collection('products')
+                                             .doc(
+                                             widget.productId)
+                                             .update({
+                                           'videoUrl': FieldValue.arrayRemove(
+                                               [video]),
+                                         }).then((value) {
+                                           FirebaseStorage.instance
+                                               .refFromURL(video)
+                                               .delete();
+                                           setState(() {
+                                             videos.remove(video);
+                                           });
+                                         });
+                                       },
+                                       icon: Icon(
+                                         Icons.delete,
+                                         color: Colors.black,
+                                         size: 30,
+                                       ),
+                                       iconSize: 30,
+                                     ),
+                                   );
+                                   // return CachedNetworkImage(
+                                   //   imageUrl:imagesItem,
+                                   //   width: 100,
+                                   //   height: 100,
+                                   //   fit: BoxFit.cover,
+                                   // );
+                                 },
+                               ),
+                             )
+                           ]);
+                     }))
             ])));
   }
 }

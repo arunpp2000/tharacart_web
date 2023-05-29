@@ -13,6 +13,7 @@ import '../../dashboard/dashboard.dart';
 import '../b2c/b2cpdf.dart';
 import '../b2c/editpop.dart';
 import '../b2c/invoice.dart';
+import 'freeProductList.dart';
 
 class QuotationDetails extends StatefulWidget {
   var id;
@@ -40,7 +41,10 @@ class _QuotationDetailsState extends State<QuotationDetails> {
   Map address = {};
   var data;
   List items = [];
-  int sum=0;
+  double sum=0;
+  double tax=0;
+  double gst=0;
+  double itemTotal=0;
   int q=0;
 
   int totalExcel=0;
@@ -56,12 +60,10 @@ class _QuotationDetailsState extends State<QuotationDetails> {
         .snapshots()
         .listen((event) {
       data = event.data();
-
       double tot = data['total'] ?? 0;
       double qnty = data['quantity'] ?? 0;
       double pre = data['price'] ?? 0;
       double gt = data['gst'] ?? 0;
-
       double summ = (tot-qnty) * (pre*100) / (100+gt);
     //  gst=gst+(item.quantity *(mrp*tax/(100+tax)));
       // var summ = (double.tryParse(data['total']) - (double.tryParse(data['quantity'])))
@@ -69,18 +71,27 @@ class _QuotationDetailsState extends State<QuotationDetails> {
       print(summ);
        sum=0;
        q=0;
+       gst=0;
+       tax=0;
+       itemTotal=0;
 
        totalExcel=0;
       items = [];
       for (var a in event.data()!['items']) {
         items.add(a);
-        sum = a['price'] + sum;
-        q = a['quantity'] + q;
+        tax = a['gst'].toDouble();
+        sum = ((a['newPrice']) * (a['newQty'])) + sum;
+
+        gst = gst +
+            (a['newQty'] * ((a['newPrice']) * tax / (100 + tax)));
+        itemTotal = itemTotal +
+            (a['newQty'] * (a['newPrice'] * 100 / (100 + tax)));
         print("--------");
         print(sum);
       }
-      totalExcel=sum*q;
-      grandtotal=(totalExcel!+data['deliveryCharge']+data['gst'])-data['discount'];
+      // totalExcel=sum*q;
+      grandtotal = (sum + data['deliveryCharge']) -data['discount'];
+
       address = event.data()!['shippingAddress'];
       deliverycharge.text=data['deliveryCharge'].toString();
       // Gst.text=summ.toString();
@@ -117,6 +128,7 @@ print(items);
   final productPrice = TextEditingController();
   final productGst = TextEditingController();
   final productGty = TextEditingController();
+  final productQty = TextEditingController();
   final productunitPrice = TextEditingController();
   final productDiscount = TextEditingController();
 
@@ -259,36 +271,6 @@ print(items);
                                             fontSize: 11),
                                       ),
                                     ),
-                                    DataColumn(
-                                      label: Text("Invoice Number",
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 11)),
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        "ShipRocketId",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11),
-                                      ),
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        "Refferred By",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11),
-                                      ),
-                                    ),
-                                    DataColumn(
-                                      label: Text(
-                                        "PromoCode",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11),
-                                      ),
-                                    ),
                                   ],
                                   rows: List.generate(
                                     1,
@@ -335,43 +317,7 @@ print(items);
                                               fontWeight: FontWeight.bold,
                                             ),
                                           )),
-                                          DataCell(SelectableText(
-                                            'TCE-${invoiceNo ?? ''}',
-                                            style: TextStyle(
-                                              fontFamily: 'Lexend Deca',
-                                              color: Colors.black,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )),
-                                          DataCell(SelectableText(
-                                            shipprocketId ?? '',
-                                            // data['shipRocketOrderId'],
-                                            style: TextStyle(
-                                              fontFamily: 'Lexend Deca',
-                                              color: Colors.black,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )),
-                                          DataCell(SelectableText(
-                                            data['referralCode']??'',
-                                            style: TextStyle(
-                                              fontFamily: 'Lexend Deca',
-                                              color: Colors.black,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )),
-                                          DataCell(SelectableText(
-                                            data['promoCode'].toString(),
-                                            style: TextStyle(
-                                              fontFamily: 'Lexend Deca',
-                                              color: Colors.black,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )),
+
                                         ],
                                       );
                                     },
@@ -697,18 +643,11 @@ print(items);
                                       ),
                                     ),
                                     DataColumn(
-                                      label: Text("Product Code",
+                                      label:Expanded(child: Text("Product Code",
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 11)),
                                     ),
-                                    DataColumn(
-                                      label: Text(
-                                        "Qty",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11),
-                                      ),
                                     ),
                                     DataColumn(
                                       label: Text("hsnCode",
@@ -723,10 +662,59 @@ print(items);
                                               fontSize: 11)),
                                     ),
                                     DataColumn(
-                                      label: Text("Prize",
+                                      label: Expanded(child:Text(
+                                        "Actucal Qty",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green,
+                                            fontSize: 11),
+                                      ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: Expanded(child:Text("Actucal Prize",
                                           style: TextStyle(
+                                              color: Colors.green,
                                               fontWeight: FontWeight.bold,
                                               fontSize: 11)),
+                                    ),
+                                    ),
+                                    DataColumn(
+                                      label:Expanded(child: Text(
+                                        "Expected Qty",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.deepPurple,
+                                            fontSize: 11),
+                                      ),
+                                    ),
+                                    ),
+                                    DataColumn(
+                                      label: Expanded(child: Text("Expected Prize",
+                                          style: TextStyle(
+                                              color: Colors.deepPurple,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 11)),
+                                    )
+                                    ),
+                                    DataColumn(
+                                      label: Expanded(child:Text(
+                                        "New Qty",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.red,
+                                            fontSize: 11),
+                                      ),
+                                      ),
+                                    ),
+                                    DataColumn(
+                                      label: Expanded(
+                                        child: Text("New Prize",
+                                            style: TextStyle(
+                                                color: Colors.red,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 11)),
+                                      ),
                                     ),
                                     DataColumn(
                                       label: Text(" ",
@@ -743,8 +731,8 @@ print(items);
                                           items[index]['productCode']??'';
                                       String price =
                                           items[index]['price'].toString();
-                                      productPrice.text =
-                                          items[index]['price'].toString();
+                                      String p = items[index]['price'].toString();
+                                      int status = items[index]['status'];
                                       productGty.text =
                                           items[index]['quantity'].toString();
                                       // productGst.text= items[index]['gst'].toString();
@@ -837,15 +825,7 @@ print(items);
                                               fontWeight: FontWeight.bold,
                                             ),
                                           )),
-                                          DataCell(SelectableText(
-                                            qty,
-                                            style: TextStyle(
-                                              fontFamily: 'Lexend Deca',
-                                              color: Colors.black,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )),
+
                                           DataCell(SelectableText(
                                             hcode,
                                             style: TextStyle(
@@ -865,7 +845,25 @@ print(items);
                                             ),
                                           )),
                                           DataCell(SelectableText(
+                                            qty,
+                                            style: TextStyle(
+                                              fontFamily: 'Lexend Deca',
+                                              color: Colors.green,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )),
+                                          DataCell(SelectableText(
                                             price,
+                                            style: TextStyle(
+                                              fontFamily: 'Lexend Deca',
+                                              color: Colors.green,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )),
+                                          DataCell(SelectableText(
+                                            items[index]['expectdQty'].toString(),
                                             style: TextStyle(
                                               fontFamily: 'Lexend Deca',
                                               color: Colors.black,
@@ -873,353 +871,313 @@ print(items);
                                               fontWeight: FontWeight.bold,
                                             ),
                                           )),
+                                          DataCell(SelectableText(
+                                            items[index]['expectdPrice'].toString(),
+                                            style: TextStyle(
+                                              fontFamily: 'Lexend Deca',
+                                              color: Colors.black,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )),
+                                          DataCell(SelectableText(
+                                            items[index]['newQty'].toString(),
+                                            style: TextStyle(
+                                              fontFamily: 'Lexend Deca',
+                                              color: Colors.red,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )),
+                                          DataCell(SelectableText(
+                                            items[index]['newPrice'].toString(),
+                                            style: TextStyle(
+                                              fontFamily: 'Lexend Deca',
+                                              color: Colors.red,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )),
                                           DataCell(ElevatedButton(
                                               onPressed: () {
                                                 showDialog(
-                                                    context: context,
-                                                    barrierDismissible: false,
-                                                    builder: (buildContext) {
+                                                    context:
+                                                    context,
+                                                    barrierDismissible:
+                                                    false,
+                                                    builder:
+                                                        (buildContext) {
+                                                      print('gst:  ' +
+                                                          items[index]['gst']
+                                                              .toString());
+                                                      productGst
+                                                          .text = items[index]
+                                                      [
+                                                      'gst']
+                                                          .toString();
+                                                      productPrice
+                                                          .text = items[index]
+                                                      [
+                                                      'newPrice']
+                                                          .toString();
+                                                      productQty
+                                                          .text = items[index]
+                                                      [
+                                                      'newQty']
+                                                          .toString();
                                                       return AlertDialog(
                                                         title: Text(
-                                                            'Edit Product  Details'),
+                                                            'Edit New Product details'),
                                                         content:
-                                                            SingleChildScrollView(
-                                                          child: Container(
+                                                        SingleChildScrollView(
                                                             child: Column(
                                                               children: [
                                                                 Container(
                                                                   width: 350,
-                                                                  decoration:
-                                                                      BoxDecoration(
-                                                                    color: Colors
-                                                                        .white,
-                                                                    borderRadius:
-                                                                        BorderRadius
-                                                                            .circular(8),
-                                                                    border:
-                                                                        Border
-                                                                            .all(
-                                                                      color: Color(
-                                                                          0xFFE6E6E6),
+                                                                  decoration: BoxDecoration(
+                                                                    color: Colors.white,
+                                                                    borderRadius: BorderRadius.circular(8),
+                                                                    border: Border.all(
+                                                                      color: Color(0xFFE6E6E6),
                                                                     ),
                                                                   ),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: EdgeInsets
-                                                                        .fromLTRB(
-                                                                            16,
-                                                                            0,
-                                                                            0,
-                                                                            0),
-                                                                    child:
-                                                                        TextFormField(
-                                                                      autovalidateMode:
-                                                                          AutovalidateMode
-                                                                              .onUserInteraction,
-                                                                      validator:
-                                                                          (value) {
-                                                                        RegExp
-                                                                            regex =
-                                                                            RegExp(r'^\d+(\.\d+)?$');
-                                                                        if (!regex
-                                                                            .hasMatch(value!)) {
+                                                                  child: Padding(
+                                                                    padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
+                                                                    child: TextFormField(
+                                                                      keyboardType: TextInputType.number,
+                                                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                                      validator: (value) {
+                                                                        RegExp regex = RegExp(r'^\d+(\.\d+)?$');
+                                                                        if (!regex.hasMatch(value!)) {
                                                                           return "Enter only numbers";
                                                                         }
                                                                       },
-                                                                      controller:
-                                                                          productPrice,
-                                                                      obscureText:
-                                                                          false,
-                                                                      decoration:
-                                                                          InputDecoration(
-                                                                        labelText:
-                                                                            'price',
-                                                                        labelStyle:
-                                                                            TextStyle(
-                                                                          fontFamily:
-                                                                              'Montserrat',
-                                                                          color:
-                                                                              Color(0xFF8B97A2),
-                                                                          fontWeight:
-                                                                              FontWeight.w500,
+                                                                      controller: productPrice,
+                                                                      obscureText: false,
+                                                                      decoration: InputDecoration(
+                                                                        labelText: 'New Price',
+                                                                        labelStyle: TextStyle(
+                                                                          fontFamily: 'Montserrat',
+                                                                          color: Color(0xFF8B97A2),
+                                                                          fontWeight: FontWeight.w500,
                                                                         ),
-                                                                        hintText:
-                                                                            'Enter Name',
-                                                                        hintStyle:
-                                                                            TextStyle(
-                                                                          fontFamily:
-                                                                              'Montserrat',
-                                                                          color:
-                                                                              Color(0xFF8B97A2),
-                                                                          fontWeight:
-                                                                              FontWeight.w500,
+                                                                        hintText: 'Enter Price',
+                                                                        hintStyle: TextStyle(
+                                                                          fontFamily: 'Montserrat',
+                                                                          color: Color(0xFF8B97A2),
+                                                                          fontWeight: FontWeight.w500,
                                                                         ),
-                                                                        enabledBorder:
-                                                                            UnderlineInputBorder(
-                                                                          borderSide:
-                                                                              BorderSide(
-                                                                            color:
-                                                                                Colors.transparent,
-                                                                            width:
-                                                                                1,
+                                                                        enabledBorder: UnderlineInputBorder(
+                                                                          borderSide: BorderSide(
+                                                                            color: Colors.transparent,
+                                                                            width: 1,
                                                                           ),
-                                                                          borderRadius:
-                                                                              const BorderRadius.only(
-                                                                            topLeft:
-                                                                                Radius.circular(4.0),
-                                                                            topRight:
-                                                                                Radius.circular(4.0),
+                                                                          borderRadius: const BorderRadius.only(
+                                                                            topLeft: Radius.circular(4.0),
+                                                                            topRight: Radius.circular(4.0),
                                                                           ),
                                                                         ),
-                                                                        focusedBorder:
-                                                                            UnderlineInputBorder(
-                                                                          borderSide:
-                                                                              BorderSide(
-                                                                            color:
-                                                                                Colors.transparent,
-                                                                            width:
-                                                                                1,
+                                                                        focusedBorder: UnderlineInputBorder(
+                                                                          borderSide: BorderSide(
+                                                                            color: Colors.transparent,
+                                                                            width: 1,
                                                                           ),
-                                                                          borderRadius:
-                                                                              const BorderRadius.only(
-                                                                            topLeft:
-                                                                                Radius.circular(4.0),
-                                                                            topRight:
-                                                                                Radius.circular(4.0),
+                                                                          borderRadius: const BorderRadius.only(
+                                                                            topLeft: Radius.circular(4.0),
+                                                                            topRight: Radius.circular(4.0),
                                                                           ),
                                                                         ),
                                                                       ),
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontFamily:
-                                                                            'Montserrat',
-                                                                        color: Color(
-                                                                            0xFF8B97A2),
-                                                                        fontWeight:
-                                                                            FontWeight.w500,
+                                                                      style: TextStyle(
+                                                                        fontFamily: 'Montserrat',
+                                                                        color: Color(0xFF8B97A2),
+                                                                        fontWeight: FontWeight.w500,
                                                                       ),
                                                                     ),
                                                                   ),
                                                                 ),
                                                                 SizedBox(
-                                                                  height: 10,
+                                                                  height: 5,
                                                                 ),
                                                                 Container(
                                                                   width: 350,
-                                                                  decoration:
-                                                                      BoxDecoration(
-                                                                    color: Colors
-                                                                        .white,
-                                                                    borderRadius:
-                                                                        BorderRadius
-                                                                            .circular(8),
-                                                                    border:
-                                                                        Border
-                                                                            .all(
-                                                                      color: Color(
-                                                                          0xFFE6E6E6),
+                                                                  decoration: BoxDecoration(
+                                                                    color: Colors.white,
+                                                                    borderRadius: BorderRadius.circular(8),
+                                                                    border: Border.all(
+                                                                      color: Color(0xFFE6E6E6),
                                                                     ),
                                                                   ),
-                                                                  child:
-                                                                      Padding(
-                                                                    padding: EdgeInsets
-                                                                        .fromLTRB(
-                                                                            16,
-                                                                            0,
-                                                                            0,
-                                                                            0),
-                                                                    child:
-                                                                        TextFormField(
-                                                                      autovalidateMode:
-                                                                          AutovalidateMode
-                                                                              .onUserInteraction,
-                                                                      validator:
-                                                                          (value) {
-                                                                        RegExp
-                                                                            regex =
-                                                                            RegExp(r'^\d+(\.\d+)?$');
-                                                                        if (!regex
-                                                                            .hasMatch(value!)) {
+                                                                  child: Padding(
+                                                                    padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
+                                                                    child: TextFormField(
+                                                                      keyboardType: TextInputType.number,
+                                                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                                      validator: (value) {
+                                                                        RegExp regex = RegExp(r'^\d+(\d+)?$');
+                                                                        if (!regex.hasMatch(value!)) {
                                                                           return "Enter only numbers";
                                                                         }
                                                                       },
-                                                                      controller:
-                                                                          productGty,
-                                                                      obscureText:
-                                                                          false,
-                                                                      decoration:
-                                                                          InputDecoration(
-                                                                        labelText:
-                                                                            'Quanity',
-                                                                        labelStyle:
-                                                                            TextStyle(
-                                                                          fontFamily:
-                                                                              'Montserrat',
-                                                                          color:
-                                                                              Color(0xFF8B97A2),
-                                                                          fontWeight:
-                                                                              FontWeight.w500,
+                                                                      controller: productQty,
+                                                                      obscureText: false,
+                                                                      decoration: InputDecoration(
+                                                                        labelText: 'New Quantity',
+                                                                        labelStyle: TextStyle(
+                                                                          fontFamily: 'Montserrat',
+                                                                          color: Color(0xFF8B97A2),
+                                                                          fontWeight: FontWeight.w500,
                                                                         ),
-                                                                        hintText:
-                                                                            'Enter Quanity',
-                                                                        hintStyle:
-                                                                            TextStyle(
-                                                                          fontFamily:
-                                                                              'Montserrat',
-                                                                          color:
-                                                                              Color(0xFF8B97A2),
-                                                                          fontWeight:
-                                                                              FontWeight.w500,
+                                                                        hintText: 'Enter Quantity',
+                                                                        hintStyle: TextStyle(
+                                                                          fontFamily: 'Montserrat',
+                                                                          color: Color(0xFF8B97A2),
+                                                                          fontWeight: FontWeight.w500,
                                                                         ),
-                                                                        enabledBorder:
-                                                                            UnderlineInputBorder(
-                                                                          borderSide:
-                                                                              BorderSide(
-                                                                            color:
-                                                                                Colors.transparent,
-                                                                            width:
-                                                                                1,
+                                                                        enabledBorder: UnderlineInputBorder(
+                                                                          borderSide: BorderSide(
+                                                                            color: Colors.transparent,
+                                                                            width: 1,
                                                                           ),
-                                                                          borderRadius:
-                                                                              const BorderRadius.only(
-                                                                            topLeft:
-                                                                                Radius.circular(4.0),
-                                                                            topRight:
-                                                                                Radius.circular(4.0),
+                                                                          borderRadius: const BorderRadius.only(
+                                                                            topLeft: Radius.circular(4.0),
+                                                                            topRight: Radius.circular(4.0),
                                                                           ),
                                                                         ),
-                                                                        focusedBorder:
-                                                                            UnderlineInputBorder(
-                                                                          borderSide:
-                                                                              BorderSide(
-                                                                            color:
-                                                                                Colors.transparent,
-                                                                            width:
-                                                                                1,
+                                                                        focusedBorder: UnderlineInputBorder(
+                                                                          borderSide: BorderSide(
+                                                                            color: Colors.transparent,
+                                                                            width: 1,
                                                                           ),
-                                                                          borderRadius:
-                                                                              const BorderRadius.only(
-                                                                            topLeft:
-                                                                                Radius.circular(4.0),
-                                                                            topRight:
-                                                                                Radius.circular(4.0),
+                                                                          borderRadius: const BorderRadius.only(
+                                                                            topLeft: Radius.circular(4.0),
+                                                                            topRight: Radius.circular(4.0),
                                                                           ),
                                                                         ),
                                                                       ),
-                                                                      style:
-                                                                          TextStyle(
-                                                                        fontFamily:
-                                                                            'Montserrat',
-                                                                        color: Color(
-                                                                            0xFF8B97A2),
-                                                                        fontWeight:
-                                                                            FontWeight.w500,
+                                                                      style: TextStyle(
+                                                                        fontFamily: 'Montserrat',
+                                                                        color: Color(0xFF8B97A2),
+                                                                        fontWeight: FontWeight.w500,
                                                                       ),
                                                                     ),
                                                                   ),
                                                                 ),
                                                                 SizedBox(
-                                                                  height: 10,
+                                                                  height: 5,
+                                                                ),
+                                                                Container(
+                                                                  width: 350,
+                                                                  decoration: BoxDecoration(
+                                                                    color: Colors.white,
+                                                                    borderRadius: BorderRadius.circular(8),
+                                                                    border: Border.all(
+                                                                      color: Color(0xFFE6E6E6),
+                                                                    ),
+                                                                  ),
+                                                                  child: Padding(
+                                                                    padding: EdgeInsets.fromLTRB(16, 0, 0, 0),
+                                                                    child: TextFormField(
+                                                                      keyboardType: TextInputType.number,
+                                                                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                                                                      validator: (value) {
+                                                                        RegExp regex = RegExp(r'^\d+(\.\d+)?$');
+                                                                        if (!regex.hasMatch(value!)) {
+                                                                          return "Enter only numbers";
+                                                                        }
+                                                                      },
+                                                                      controller: productGst,
+                                                                      obscureText: false,
+                                                                      decoration: InputDecoration(
+                                                                        labelText: 'GST',
+                                                                        labelStyle: TextStyle(
+                                                                          fontFamily: 'Montserrat',
+                                                                          color: Color(0xFF8B97A2),
+                                                                          fontWeight: FontWeight.w500,
+                                                                        ),
+                                                                        hintText: 'Enter GST',
+                                                                        hintStyle: TextStyle(
+                                                                          fontFamily: 'Montserrat',
+                                                                          color: Color(0xFF8B97A2),
+                                                                          fontWeight: FontWeight.w500,
+                                                                        ),
+                                                                        enabledBorder: UnderlineInputBorder(
+                                                                          borderSide: BorderSide(
+                                                                            color: Colors.transparent,
+                                                                            width: 1,
+                                                                          ),
+                                                                          borderRadius: const BorderRadius.only(
+                                                                            topLeft: Radius.circular(4.0),
+                                                                            topRight: Radius.circular(4.0),
+                                                                          ),
+                                                                        ),
+                                                                        focusedBorder: UnderlineInputBorder(
+                                                                          borderSide: BorderSide(
+                                                                            color: Colors.transparent,
+                                                                            width: 1,
+                                                                          ),
+                                                                          borderRadius: const BorderRadius.only(
+                                                                            topLeft: Radius.circular(4.0),
+                                                                            topRight: Radius.circular(4.0),
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                      style: TextStyle(
+                                                                        fontFamily: 'Montserrat',
+                                                                        color: Color(0xFF8B97A2),
+                                                                        fontWeight: FontWeight.w500,
+                                                                      ),
+                                                                    ),
+                                                                  ),
                                                                 ),
                                                               ],
-                                                            ),
-                                                          ),
-                                                        ),
+                                                            )),
                                                         actions: [
                                                           TextButton(
                                                               onPressed: () {
-                                                                Navigator.pop(
-                                                                    context);
+                                                                Navigator.pop(context);
                                                               },
-                                                              child: Text(
-                                                                  'Cancel')),
+                                                              child: Text('Cancel')),
                                                           TextButton(
-                                                              onPressed:
-                                                                  () async {
-                                                                bool pressed =
-                                                                    await alert(
-                                                                        context,
-                                                                        'Do you want update Product Details?');
+                                                              onPressed: () async {
+                                                                bool pressed = await alert(context, 'Do you want update Product Details?');
                                                                 if (pressed) {
-                                                                  items.removeAt(
-                                                                      index);
-                                                                  items.insert(
-                                                                      index,
-                                                                      {
-                                                                        'color':
-                                                                            null,
-                                                                        'cut':
-                                                                            null,
-                                                                        'expectedPrice':
-                                                                            exP,
-                                                                        'expectedQty':
-                                                                            exQ,
-                                                                        'gst':
-                                                                            gst,
-                                                                        'hsnCode':
-                                                                            hcode,
-                                                                        'id':
-                                                                            id,
-                                                                        'image':
-                                                                            image,
-                                                                        'name':
-                                                                            name,
-                                                                        'price':
-                                                                            int.tryParse(productPrice.text),
-                                                                        'productCode':
-                                                                            productCode,
-                                                                        'quantity':
-                                                                            int.tryParse(productGty.text),
-                                                                        'shopDiscount':
-                                                                            null,
-                                                                        'shopId':
-                                                                            null,
-                                                                        'size':
-                                                                            null,
-                                                                        'status':
-                                                                            0,
-                                                                        'unit':
-                                                                            null,
-                                                                      });
-                                                                  setState(
-                                                                      () {});
-                                                                  FirebaseFirestore
-                                                                      .instance
-                                                                      .collection(
-                                                                          'quotation')
-                                                                      .doc(widget
-                                                                          .id)
-                                                                      .update({
+                                                                  items.removeAt(index);
+                                                                  items.insert(index, {
+                                                                    'color': null,
+                                                                    'cut': null,
+                                                                    'expectedPrice': exP,
+                                                                    'expectedQty': exQ,
+                                                                    'newPrice': double.tryParse(productPrice.text),
+                                                                    'newQty': int.tryParse(productQty.text),
+                                                                    'gst': double.tryParse(productGst.text),
+                                                                    'hsnCode': hcode,
+                                                                    'id': id,
+                                                                    'image': image,
+                                                                    'name': name,
+                                                                    'price': p,
+                                                                    'productCode': productCode,
+                                                                    'quantity': qty,
+                                                                    'shopDiscount': null,
+                                                                    'shopId': null,
+                                                                    'size': null,
+                                                                    'status': status,
+                                                                    'unit': null,
+                                                                  });
+                                                                  FirebaseFirestore.instance.collection('quotation').doc(widget.id).update({
                                                                     'items': items,
-                                                                  }).then((value) {
-                                                                    FirebaseFirestore
-                                                                        .instance
-                                                                        .collection(
-                                                                        'quotation')
-                                                                        .doc(widget
-                                                                        .id)
-                                                                        .update({
-                                                                      'price':sum!+data['deliveryCharge'],
-                                                                    });
                                                                   });
-
-                                                                  submit = true;
-                                                                  Navigator.pop(
-                                                                      context);
-                                                                  showUploadMessage(
-                                                                      context,
-                                                                      '  Updated...');
-                                                                  setState(() {
-
-                                                                  });
+                                                                  Navigator.pop(context);
+                                                                  showUploadMessage(context, '  Updated...');
+                                                                  setState(() {});
                                                                 }
                                                               },
-                                                              child: Text(
-                                                                  'Update')),
+                                                              child: Text('Update')),
                                                         ],
                                                       );
                                                     });
-                                              },
+                                                  },
+
                                               child: Icon(Icons.edit))),
                                         ],
                                       );
@@ -1253,7 +1211,51 @@ print(items);
                           child: Column(
                             children: [
                               Padding(
+                                padding: const EdgeInsets.all(10),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) => FreeProductList(
+                                                    id: widget.id,
+                                                  )));
+                                        },
+                                        child: Text('Add Free Product'))
+                                  ],
+                                ),
+                              ),
+                              Padding(
                                 padding: const EdgeInsets.only(right: 80),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      'Price',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                    ),
+                                    Text(
+                                      '\₹${sum.toString()}',
+                                      style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 30,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 20),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
@@ -1272,11 +1274,173 @@ print(items);
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold),
                                     ),
+                                    SizedBox(
+                                      width: 30,
+                                    ),
+                                    ElevatedButton(
+                                        onPressed: () {
+                                          showDialog(
+                                              context: context,
+                                              barrierDismissible: false,
+                                              builder: (buildContext) {
+                                                return AlertDialog(
+                                                  title: Text('Edit Discount'),
+                                                  content: SingleChildScrollView(
+                                                    child: Container(
+                                                      child: Column(
+                                                        children: [
+                                                          Container(
+                                                            width: 350,
+                                                            decoration: BoxDecoration(
+                                                              color: Colors.white,
+                                                              borderRadius:
+                                                              BorderRadius
+                                                                  .circular(8),
+                                                              border: Border.all(
+                                                                color:
+                                                                Color(0xFFE6E6E6),
+                                                              ),
+                                                            ),
+                                                            child: Padding(
+                                                              padding:
+                                                              EdgeInsets.fromLTRB(
+                                                                  16, 0, 0, 0),
+                                                              child: TextFormField(
+                                                                autovalidateMode:
+                                                                AutovalidateMode
+                                                                    .onUserInteraction,
+                                                                validator: (value) {
+                                                                  RegExp regex = RegExp(
+                                                                      r'^\d+(\.\d+)?$');
+                                                                  if (!regex.hasMatch(
+                                                                      value!)) {
+                                                                    return "Enter only numbers";
+                                                                  }
+                                                                },
+                                                                controller: discount,
+                                                                obscureText: false,
+                                                                decoration:
+                                                                InputDecoration(
+                                                                  labelText:
+                                                                  'Discount',
+                                                                  labelStyle:
+                                                                  TextStyle(
+                                                                    fontFamily:
+                                                                    'Montserrat',
+                                                                    color: Color(
+                                                                        0xFF8B97A2),
+                                                                    fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                                  ),
+                                                                  hintText:
+                                                                  'Enter Discount',
+                                                                  hintStyle:
+                                                                  TextStyle(
+                                                                    fontFamily:
+                                                                    'Montserrat',
+                                                                    color: Color(
+                                                                        0xFF8B97A2),
+                                                                    fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                                  ),
+                                                                  enabledBorder:
+                                                                  UnderlineInputBorder(
+                                                                    borderSide:
+                                                                    BorderSide(
+                                                                      color: Colors
+                                                                          .transparent,
+                                                                      width: 1,
+                                                                    ),
+                                                                    borderRadius:
+                                                                    const BorderRadius
+                                                                        .only(
+                                                                      topLeft: Radius
+                                                                          .circular(
+                                                                          4.0),
+                                                                      topRight: Radius
+                                                                          .circular(
+                                                                          4.0),
+                                                                    ),
+                                                                  ),
+                                                                  focusedBorder:
+                                                                  UnderlineInputBorder(
+                                                                    borderSide:
+                                                                    BorderSide(
+                                                                      color: Colors
+                                                                          .transparent,
+                                                                      width: 1,
+                                                                    ),
+                                                                    borderRadius:
+                                                                    const BorderRadius
+                                                                        .only(
+                                                                      topLeft: Radius
+                                                                          .circular(
+                                                                          4.0),
+                                                                      topRight: Radius
+                                                                          .circular(
+                                                                          4.0),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                style: TextStyle(
+                                                                  fontFamily:
+                                                                  'Montserrat',
+                                                                  color: Color(
+                                                                      0xFF8B97A2),
+                                                                  fontWeight:
+                                                                  FontWeight.w500,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                        onPressed: () {
+                                                          Navigator.pop(context);
+                                                        },
+                                                        child: Text('Cancel')),
+                                                    TextButton(
+                                                        onPressed: () async {
+                                                          if (
+                                                              discount.text != ''
+                                                             ) {
+                                                            FirebaseFirestore.instance
+                                                                .collection(
+                                                                'quotation')
+                                                                .doc(widget.id)
+                                                                .update({
+                                                              'discount':
+                                                              double.tryParse(
+                                                                  discount.text),
+                                                            });
+                                                            Navigator.pop(context);
+                                                            showUploadMessage(context,
+                                                                'discount Updated...');
+                                                          } else {
+                                                            discount.text == ''
+                                                                ? showUploadMessage(
+                                                                context,
+                                                                'Enter discount')
+                                                                : '';
+                                                          }
+                                                        },
+                                                        child: Text('Update')),
+                                                  ],
+                                                );
+                                              });
+                                        },
+                                        child: Icon(Icons.edit))
                                   ],
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.only(right: 80),
+                                padding: const EdgeInsets.only(right: 20),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
@@ -1295,6 +1459,165 @@ print(items);
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold),
                                     ),
+                                    SizedBox(
+                                      width: 30,
+                                    ),
+                                    ElevatedButton(
+                                        onPressed: () {
+                                          showDialog(
+                                              context: context,
+                                              barrierDismissible: false,
+                                              builder: (buildContext) {
+                                                return AlertDialog(
+                                                  title: Text('Edit  Delivery Charge'),
+                                                  content: SingleChildScrollView(
+                                                    child: Container(
+                                                      child: Column(
+                                                        children: [
+                                                          Container(
+                                                            width: 350,
+                                                            decoration: BoxDecoration(
+                                                              color: Colors.white,
+                                                              borderRadius:
+                                                              BorderRadius
+                                                                  .circular(8),
+                                                              border: Border.all(
+                                                                color:
+                                                                Color(0xFFE6E6E6),
+                                                              ),
+                                                            ),
+                                                            child: Padding(
+                                                              padding:
+                                                              EdgeInsets.fromLTRB(
+                                                                  16, 0, 0, 0),
+                                                              child: TextFormField(
+                                                                autovalidateMode:
+                                                                AutovalidateMode
+                                                                    .onUserInteraction,
+                                                                validator: (value) {
+                                                                  RegExp regex = RegExp(
+                                                                      r'^\d+(\.\d+)?$');
+                                                                  if (!regex.hasMatch(
+                                                                      value!)) {
+                                                                    return "Enter only numbers";
+                                                                  }
+                                                                },
+                                                                controller: deliverycharge,
+                                                                obscureText: false,
+                                                                decoration:
+                                                                InputDecoration(
+                                                                  labelText:
+                                                                  'Delivery charge',
+                                                                  labelStyle:
+                                                                  TextStyle(
+                                                                    fontFamily:
+                                                                    'Montserrat',
+                                                                    color: Color(
+                                                                        0xFF8B97A2),
+                                                                    fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                                  ),
+                                                                  hintText:
+                                                                  'Enter Delivery Charge',
+                                                                  hintStyle:
+                                                                  TextStyle(
+                                                                    fontFamily:
+                                                                    'Montserrat',
+                                                                    color: Color(
+                                                                        0xFF8B97A2),
+                                                                    fontWeight:
+                                                                    FontWeight
+                                                                        .w500,
+                                                                  ),
+                                                                  enabledBorder:
+                                                                  UnderlineInputBorder(
+                                                                    borderSide:
+                                                                    BorderSide(
+                                                                      color: Colors
+                                                                          .transparent,
+                                                                      width: 1,
+                                                                    ),
+                                                                    borderRadius:
+                                                                    const BorderRadius
+                                                                        .only(
+                                                                      topLeft: Radius
+                                                                          .circular(
+                                                                          4.0),
+                                                                      topRight: Radius
+                                                                          .circular(
+                                                                          4.0),
+                                                                    ),
+                                                                  ),
+                                                                  focusedBorder:
+                                                                  UnderlineInputBorder(
+                                                                    borderSide:
+                                                                    BorderSide(
+                                                                      color: Colors
+                                                                          .transparent,
+                                                                      width: 1,
+                                                                    ),
+                                                                    borderRadius:
+                                                                    const BorderRadius
+                                                                        .only(
+                                                                      topLeft: Radius
+                                                                          .circular(
+                                                                          4.0),
+                                                                      topRight: Radius
+                                                                          .circular(
+                                                                          4.0),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                style: TextStyle(
+                                                                  fontFamily:
+                                                                  'Montserrat',
+                                                                  color: Color(
+                                                                      0xFF8B97A2),
+                                                                  fontWeight:
+                                                                  FontWeight.w500,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          SizedBox(
+                                                            height: 30,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
+                                                        onPressed: () {
+                                                          Navigator.pop(context);
+                                                        },
+                                                        child: Text('Cancel')),
+                                                    TextButton(
+                                                        onPressed: () async {
+                                                          if (
+                                                              deliverycharge.text != '') {
+                                                            FirebaseFirestore.instance
+                                                                .collection(
+                                                                'quotation')
+                                                                .doc(widget.id)
+                                                                .update({
+                                                              'deliveryCharge':
+                                                              double.tryParse(deliverycharge.text),
+                                                            });
+                                                            Navigator.pop(context);
+                                                            showUploadMessage(context,
+                                                                'deliveryCharge Updated...');
+                                                          } else {
+                                                            deliverycharge.text == '' ? errorMsg(context, 'Enter deliveryCharge') : '';
+                                                          }
+                                                        },
+                                                        child: Text('Update')),
+                                                  ],
+                                                );
+                                              });
+                                        },
+                                        child: Icon(Icons.edit))
                                   ],
                                 ),
                               ),
@@ -1318,6 +1641,10 @@ print(items);
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold),
                                     ),
+                                    SizedBox(
+                                      width: 30,
+                                    ),
+
                                   ],
                                 ),
                               ),
@@ -1336,10 +1663,13 @@ print(items);
                                       width: 50,
                                     ),
                                     Text(
-                                      '\₹${data['gst'].toStringAsFixed(2)}',
+                                      '\₹${gst.toStringAsFixed(2)}',
                                       style: TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold),
+                                    ),
+                                    SizedBox(
+                                      width: 30,
                                     ),
                                   ],
                                 ),
@@ -1416,6 +1746,10 @@ print(items);
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.bold),
                                           ),
+                                          SizedBox(
+                                            width: 30,
+                                          ),
+
                                         ],
                                       ),
                                     )
@@ -1423,643 +1757,161 @@ print(items);
                                 ),
                               ),
                               // submit==true?
-                              ElevatedButton(
-                                  onPressed: () {
 
-                                    showDialog(
-                                        context: context,
-                                        barrierDismissible: false,
-                                        builder: (buildContext) {
-                                          return AlertDialog(
-                                            title: Text('Edit Order Details'),
-                                            content: SingleChildScrollView(
-                                              child: Container(
-                                                child: Column(
-                                                  children: [
-                                                    Container(
-                                                      width: 350,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                        border: Border.all(
-                                                          color:
-                                                              Color(0xFFE6E6E6),
-                                                        ),
-                                                      ),
-                                                      child: Padding(
-                                                        padding:
-                                                            EdgeInsets.fromLTRB(
-                                                                16, 0, 0, 0),
-                                                        child: TextFormField(
-                                                          autovalidateMode:
-                                                              AutovalidateMode
-                                                                  .onUserInteraction,
-                                                          validator: (value) {
-                                                            RegExp regex = RegExp(
-                                                                r'^\d+(\.\d+)?$');
-                                                            if (!regex.hasMatch(
-                                                                value!)) {
-                                                              return "Enter only numbers";
-                                                            }
-                                                          },
-                                                          controller: Price,
-                                                          obscureText: false,
-                                                          decoration:
-                                                              InputDecoration(
-                                                            labelText: 'price',
-                                                            labelStyle:
-                                                                TextStyle(
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              color: Color(
-                                                                  0xFF8B97A2),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            hintText:
-                                                                'Enter Name',
-                                                            hintStyle:
-                                                                TextStyle(
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              color: Color(
-                                                                  0xFF8B97A2),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            enabledBorder:
-                                                                UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: Colors
-                                                                    .transparent,
-                                                                width: 1,
-                                                              ),
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                              ),
-                                                            ),
-                                                            focusedBorder:
-                                                                UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: Colors
-                                                                    .transparent,
-                                                                width: 1,
-                                                              ),
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Montserrat',
-                                                            color: Color(
-                                                                0xFF8B97A2),
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 10,
-                                                    ),
-                                                    Container(
-                                                      width: 350,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                        border: Border.all(
-                                                          color:
-                                                              Color(0xFFE6E6E6),
-                                                        ),
-                                                      ),
-                                                      child: Padding(
-                                                        padding:
-                                                            EdgeInsets.fromLTRB(
-                                                                16, 0, 0, 0),
-                                                        child: TextFormField(
-                                                          autovalidateMode:
-                                                              AutovalidateMode
-                                                                  .onUserInteraction,
-                                                          validator: (value) {
-                                                            RegExp regex = RegExp(
-                                                                r'^\d+(\.\d+)?$');
-                                                            if (!regex.hasMatch(
-                                                                value!)) {
-                                                              return "Enter only numbers";
-                                                            }
-                                                          },
-                                                          controller: discount,
-                                                          obscureText: false,
-                                                          decoration:
-                                                              InputDecoration(
-                                                            labelText:
-                                                                'Discount',
-                                                            labelStyle:
-                                                                TextStyle(
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              color: Color(
-                                                                  0xFF8B97A2),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            hintText:
-                                                                'Enter Discount',
-                                                            hintStyle:
-                                                                TextStyle(
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              color: Color(
-                                                                  0xFF8B97A2),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            enabledBorder:
-                                                                UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: Colors
-                                                                    .transparent,
-                                                                width: 1,
-                                                              ),
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                              ),
-                                                            ),
-                                                            focusedBorder:
-                                                                UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: Colors
-                                                                    .transparent,
-                                                                width: 1,
-                                                              ),
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Montserrat',
-                                                            color: Color(
-                                                                0xFF8B97A2),
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 10,
-                                                    ),
-                                                    Container(
-                                                      width: 350,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                        border: Border.all(
-                                                          color:
-                                                              Color(0xFFE6E6E6),
-                                                        ),
-                                                      ),
-                                                      child: Padding(
-                                                        padding:
-                                                            EdgeInsets.fromLTRB(
-                                                                16, 0, 0, 0),
-                                                        child: TextFormField(
-                                                          validator: (value) {
-                                                            RegExp regex =
-                                                                RegExp(
-                                                                    r'^\d+$');
-                                                            if (regex.hasMatch(
-                                                                value!)) {
-                                                              print(
-                                                                  "Input contains only numbers");
-                                                            } else {
-                                                              print(
-                                                                  "Input contains non-numeric characters");
-                                                            }
-                                                          },
-                                                          controller: deliverycharge,
-                                                          obscureText: false,
-                                                          decoration:
-                                                              InputDecoration(
-                                                            labelText:
-                                                                'Delivery charge',
-                                                            labelStyle:
-                                                                TextStyle(
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              color: Color(
-                                                                  0xFF8B97A2),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            hintText:
-                                                                'Enter Delivery Charge',
-                                                            hintStyle:
-                                                                TextStyle(
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              color: Color(
-                                                                  0xFF8B97A2),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            enabledBorder:
-                                                                UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: Colors
-                                                                    .transparent,
-                                                                width: 1,
-                                                              ),
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                              ),
-                                                            ),
-                                                            focusedBorder:
-                                                                UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: Colors
-                                                                    .transparent,
-                                                                width: 1,
-                                                              ),
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Montserrat',
-                                                            color: Color(
-                                                                0xFF8B97A2),
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 10,
-                                                    ),
-                                                    Container(
-                                                      width: 350,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                        border: Border.all(
-                                                          color:
-                                                              Color(0xFFE6E6E6),
-                                                        ),
-                                                      ),
-                                                      child: Padding(
-                                                        padding:
-                                                            EdgeInsets.fromLTRB(
-                                                                16, 0, 0, 0),
-                                                        child: TextFormField(
-                                                          validator: (value) {
-                                                            RegExp regex =
-                                                                RegExp(
-                                                                    r'^\d+$');
-                                                            if (regex.hasMatch(
-                                                                value!)) {
-                                                              print(
-                                                                  "Input contains only numbers");
-                                                            } else {
-                                                              print(
-                                                                  "Input contains non-numeric characters");
-                                                            }
-                                                          },
-                                                          controller: totalgst,
-                                                          obscureText: false,
-                                                          decoration:
-                                                              InputDecoration(
-                                                            labelText:
-                                                                'Total (excel.gst)',
-                                                            labelStyle:
-                                                                TextStyle(
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              color: Color(
-                                                                  0xFF8B97A2),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            hintText:
-                                                                'Total',
-                                                            hintStyle:
-                                                                TextStyle(
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              color: Color(
-                                                                  0xFF8B97A2),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            enabledBorder:
-                                                                UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: Colors
-                                                                    .transparent,
-                                                                width: 1,
-                                                              ),
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                              ),
-                                                            ),
-                                                            focusedBorder:
-                                                                UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: Colors
-                                                                    .transparent,
-                                                                width: 1,
-                                                              ),
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Montserrat',
-                                                            color: Color(
-                                                                0xFF8B97A2),
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                      height: 10,
-                                                    ),
-                                                    Container(
-                                                      width: 350,
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                        border: Border.all(
-                                                          color:
-                                                              Color(0xFFE6E6E6),
-                                                        ),
-                                                      ),
-                                                      child: Padding(
-                                                        padding:
-                                                            EdgeInsets.fromLTRB(
-                                                                16, 0, 0, 0),
-                                                        child: TextFormField(
-                                                          autovalidateMode:
-                                                              AutovalidateMode
-                                                                  .onUserInteraction,
-                                                          validator: (value) {
-                                                            RegExp regex = RegExp(
-                                                                r'^\d+(\.\d+)?$');
-                                                            if (!regex.hasMatch(
-                                                                value!)) {
-                                                              return "Enter only numbers";
-                                                            }
-                                                          },
-                                                          controller: Gst,
-                                                          obscureText: false,
-                                                          decoration:
-                                                              InputDecoration(
-                                                            labelText: 'Gst',
-                                                            labelStyle:
-                                                                TextStyle(
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              color: Color(
-                                                                  0xFF8B97A2),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            hintText:
-                                                                'Enter Gst',
-                                                            hintStyle:
-                                                                TextStyle(
-                                                              fontFamily:
-                                                                  'Montserrat',
-                                                              color: Color(
-                                                                  0xFF8B97A2),
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                            ),
-                                                            enabledBorder:
-                                                                UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: Colors
-                                                                    .transparent,
-                                                                width: 1,
-                                                              ),
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                              ),
-                                                            ),
-                                                            focusedBorder:
-                                                                UnderlineInputBorder(
-                                                              borderSide:
-                                                                  BorderSide(
-                                                                color: Colors
-                                                                    .transparent,
-                                                                width: 1,
-                                                              ),
-                                                              borderRadius:
-                                                                  const BorderRadius
-                                                                      .only(
-                                                                topLeft: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                                topRight: Radius
-                                                                    .circular(
-                                                                        4.0),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          style: TextStyle(
-                                                            fontFamily:
-                                                                'Montserrat',
-                                                            color: Color(
-                                                                0xFF8B97A2),
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                  onPressed: () {
-                                                    Navigator.pop(context);
-                                                  },
-                                                  child: Text('Cancel')),
-                                              TextButton(
-                                                  onPressed: () async {
-                                                    if (Price.text != '' &&
-                                                        discount.text != '' &&
-                                                        Gst.text != '' &&
-                                                        totalgst.text != '') {
-                                                      FirebaseFirestore.instance
-                                                          .collection(
-                                                              'quotation')
-                                                          .doc(widget.id)
-                                                          .update({
-                                                        'price':
-                                                            double.tryParse(
-                                                                Price.text),
-                                                        'discount':
-                                                            double.tryParse(
-                                                                discount.text),
-                                                        'deliveryCharge':
-                                                            double.tryParse(
-                                                                deliverycharge
-                                                                    .text),
-                                                        'gst': double.tryParse(
-                                                            Gst.text),
-                                                        'total': double.tryParse(
-                                                            totalgst.text),
-                                                        'quotationStatus': 1,
-                                                      });
-                                                      Navigator.pop(context);
-                                                      showUploadMessage(context,
-                                                          'Product Details Updated...');
-                                                    } else {
-                                                      Price.text == ''
-                                                          ? showUploadMessage(
-                                                              context,
-                                                              'Enter Order Price')
-                                                          : discount.text == ''
-                                                              ? showUploadMessage(
-                                                                  context,
-                                                                  'Enter Order Discount')
-                                                              : deliverycharge
-                                                                          .text ==
-                                                                      ''
-                                                                  ? showUploadMessage(
-                                                                      context,
-                                                                      'Enter Order Delivery charge')
-                                                                  : Gst.text ==
-                                                                          ''
-                                                                      ? showUploadMessage(
-                                                                          context,
-                                                                          'Enter Order Gst')
-                                                                      : totalgst.text ==
-                                                                              ''
-                                                                          ? showUploadMessage(
-                                                                              context,
-                                                                              'Enter Order Total Gst')
-                                                                          : '';
-                                                    }
-                                                  },
-                                                  child: Text('Update')),
-                                            ],
-                                          );
-                                        });
-                                  },
-                                  child: Text('update'))
                               // :SizedBox(),
                             ],
                           ),
                         ),
                       ),
                     ),
+                    data['quotationStatus']==0?
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+                          child: FFButtonWidget(
+                            onPressed: () async {
+                              bool proceed = await alert(
+                                  context, 'Do you Want Reject this Quotation?');
+                              if(proceed){
+                                FirebaseFirestore.instance.collection('quotation').doc(widget.id).update({
+                                  'quotationStatus':2
+                                });
+                                Navigator.pop(context);
+                                showUploadMessage(context, 'Rejected');
+                              }
+
+                            },
+                            text: 'Reject',
+                            options: FFButtonOptions(
+                              width: 110,
+                              height: 40,
+                              color: Colors.red,
+                              textStyle: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13
+                              ),
+                              borderSide: BorderSide(
+                                color: Colors.transparent,
+                                width: 1,
+                              ),
+                              borderRadius: 12,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+                          child: FFButtonWidget(
+                            onPressed: () async {
+                              bool proceed = await alert(
+                                  context, 'Do you Want Accept this Quotation?');
+                              if(proceed){
+                                FirebaseFirestore.instance.collection('quotation').doc(widget.id).update({
+                                  'quotationStatus':1
+                                });
+                                Navigator.pop(context);
+                                showUploadMessage(context, 'Accepted');
+                              }
+                            },
+                            text: 'Accept',
+                            options: FFButtonOptions(
+                              width: 110,
+                              height: 40,
+                              color: Colors.teal,
+                              textStyle: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13
+                              ),
+                              borderSide: BorderSide(
+                                color: Colors.transparent,
+                                width: 1,
+                              ),
+                              borderRadius: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ):data['quotationStatus']==1? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+                          child: FFButtonWidget(
+                            onPressed: () async {
+                              bool proceed = await alert(
+                                  context, 'Do you Want Reject this Quotation?');
+                              if(proceed){
+                                FirebaseFirestore.instance.collection('quotation').doc(widget.id).update({
+                                  'quotationStatus':2
+                                });
+                                Navigator.pop(context);
+                                showUploadMessage(context, 'Rejected');
+                              }
+
+                            },
+                            text: 'Reject',
+                            options: FFButtonOptions(
+                              width: 110,
+                              height: 40,
+                              color: Colors.red,
+                              textStyle: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13
+                              ),
+                              borderSide: BorderSide(
+                                color: Colors.transparent,
+                                width: 1,
+                              ),
+                              borderRadius: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ):Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+                          child: FFButtonWidget(
+                            onPressed: () async {
+                              bool proceed = await alert(
+                                  context, 'Do you Want Accept this Quotation?');
+                              if(proceed){
+                                FirebaseFirestore.instance.collection('quotation').doc(widget.id).update({
+                                  'quotationStatus':1
+                                });
+                                Navigator.pop(context);
+                                showUploadMessage(context, 'Accepted');
+                              }
+                            },
+                            text: 'Accept',
+                            options: FFButtonOptions(
+                              width: 110,
+                              height: 40,
+                              color: Colors.teal,
+                              textStyle: TextStyle(
+                                  fontFamily: 'Poppins',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13
+                              ),
+                              borderSide: BorderSide(
+                                color: Colors.transparent,
+                                width: 1,
+                              ),
+                              borderRadius: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
                   ],
                 ),
               ),

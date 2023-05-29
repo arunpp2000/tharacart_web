@@ -975,7 +975,7 @@ class _EditBrandState extends State<EditBrand> {
                                         'youTube':youTubeLinkList,
                                       });
 
-                                      Navigator.pop(context);
+
 
                                       showUploadMessage(context, 'Success!');
                                     }

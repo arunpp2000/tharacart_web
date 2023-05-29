@@ -60,6 +60,30 @@ void showUploadMessage(BuildContext context, String message,
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
+        backgroundColor: Colors.green,
+        duration: showLoading?Duration(minutes: 30):Duration(seconds: 4),
+        content: Container(
+          child: Row(
+            children: [
+              if (showLoading)
+                Padding(
+                  padding: EdgeInsets.only(right: 10.0),
+                  child: CircularProgressIndicator(),
+                ),
+              Text(message),
+            ],
+          ),
+        ),
+      ),
+    );
+}
+void errorMsg(BuildContext context, String message,
+    {bool showLoading = false}) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.red,
         duration: showLoading?Duration(minutes: 30):Duration(seconds: 4),
         content: Row(
           children: [
